@@ -83,8 +83,6 @@
 
         button:hover { background: var(--accent-hover); }
         button:disabled { background: var(--text-muted); cursor: not-allowed; }
-        button.secondary { background: transparent; border: 1px solid var(--accent); }
-        button.secondary:hover { background: rgba(124, 58, 237, 0.1); }
         button.danger { background: transparent; border: 1px solid var(--error); color: var(--error); }
         button.danger:hover { background: rgba(239, 68, 68, 0.1); }
 
@@ -109,11 +107,7 @@
             header { flex-direction: column; align-items: flex-start; gap: 10px; }
         }
 
-        .chat-section {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+        .chat-section { display: flex; flex-direction: column; gap: 15px; }
 
         .chat-box {
             height: 500px;
@@ -134,7 +128,6 @@
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Markdown rendering styles */
         .message pre { background: #000; padding: 12px; border-radius: 6px; overflow-x: auto; margin-top: 10px; margin-bottom: 10px; }
         .message code { font-family: monospace; color: #a5b4fc; }
         .message p { margin-bottom: 10px; }
@@ -142,7 +135,6 @@
         .input-area { display: flex; flex-direction: column; gap: 10px; }
         .input-wrapper { display: flex; gap: 10px; width: 100%; }
         textarea { height: 60px; resize: none; }
-        .input-actions { display: flex; gap: 10px; justify-content: space-between; }
         
         .hidden { display: none !important; }
 
@@ -160,7 +152,7 @@
         <header>
             <div>
                 <h1>✨ TeamClubAI <span>Workspace</span></h1>
-                <p>Your collaborative AI dev team.</p>
+                <p>Your collaborative, multi-API AI dev team.</p>
             </div>
             <button id="resetAppBtn" class="danger">Reset Team</button>
         </header>
@@ -169,15 +161,13 @@
 
         <div class="main-workspace">
             <div class="chat-section">
-                <div id="chatBox" class="chat-box">
-                    </div>
+                <div id="chatBox" class="chat-box"></div>
                 
                 <div class="input-area">
                     <div class="input-wrapper">
                         <input type="text" id="singleLineInput" class="hidden" placeholder="Type your answer here..." autocomplete="off">
-                        <input type="password" id="passwordInput" class="hidden" placeholder="Paste your Gemini API key here..." autocomplete="off">
+                        <input type="password" id="passwordInput" class="hidden" placeholder="Paste your API key here..." autocomplete="off">
                         <textarea id="taskInput" class="hidden" placeholder="Describe the task for your team..."></textarea>
-                        
                         <button id="sendBtn">Send</button>
                     </div>
                 </div>
@@ -204,13 +194,15 @@
             const notification = document.getElementById("notification");
             const sidebarTitle = document.getElementById("sidebarTitle");
 
-            const STAGES = { ASK_NAME: 0, ASK_COUNT: 1, ASK_MEMBERS: 2, ASK_API_KEY: 3, READY: 4 };
+            const STAGES = { ASK_NAME: 0, ASK_COUNT: 1, ASK_MEMBERS: 2, ASK_PROVIDER: 3, ASK_API_KEY: 4, READY: 5 };
 
             let appState = {
                 stage: STAGES.ASK_NAME,
                 userName: "",
                 memberCount: 0,
                 members: [],
+                apiProvider: "", // "gemini", "openai", "groq", "openrouter"
+                apiProviderName: "",
                 apiKey: "",
                 chatHistory: [] 
             };
@@ -240,9 +232,9 @@
 
             async function handleUserInput() {
                 let activeInput = null;
-                if (!singleLineInput.classList.contains("hidden")) { activeInput = singleLineInput; }
-                else if (!passwordInput.classList.contains("hidden")) { activeInput = passwordInput; }
-                else if (!taskInput.classList.contains("hidden")) { activeInput = taskInput; }
+                if (!singleLineInput.classList.contains("hidden")) activeInput = singleLineInput;
+                else if (!passwordInput.classList.contains("hidden")) activeInput = passwordInput;
+                else if (!taskInput.classList.contains("hidden")) activeInput = taskInput;
 
                 const inputVal = activeInput.value.trim();
                 if (!inputVal) return;
@@ -261,7 +253,7 @@
                         appState.stage = STAGES.ASK_COUNT;
                         saveState();
                         setTimeout(() => {
-                            addMessageToUI("System", `Nice to meet you, **${appState.userName}**! How many AI team members do you want in your club? (Please enter a number between 2 and 5)`, "agent");
+                            addMessageToUI("System", `Nice to meet you, **${appState.userName}**! How many AI team members do you want in your club? (Enter 2 to 5)`, "agent");
                             renderUIBasedOnStage();
                         }, 500);
                         break;
@@ -275,7 +267,7 @@
                             appState.stage = STAGES.ASK_MEMBERS;
                             saveState();
                             setTimeout(() => {
-                                addMessageToUI("System", `Awesome! You chose ${count} members. What would you like to name **Member 1**?`, "agent");
+                                addMessageToUI("System", `Awesome! What would you like to name **Member 1**?`, "agent");
                                 renderUIBasedOnStage();
                             }, 500);
                         }
@@ -287,13 +279,31 @@
                         if (appState.members.length < appState.memberCount) {
                             setTimeout(() => addMessageToUI("System", `Got it. What is the name of **Member ${appState.members.length + 1}**?`, "agent"), 500);
                         } else {
-                            appState.stage = STAGES.ASK_API_KEY;
+                            appState.stage = STAGES.ASK_PROVIDER;
                             saveState();
                             setTimeout(() => {
-                                addMessageToUI("System", `Great names! Your team is: **${appState.members.join(', ')}**.<br><br>Finally, please paste your **Gemini API Key** to bring them to life. (It stays securely in your browser).`, "agent");
+                                addMessageToUI("System", `Great names! Your team is: **${appState.members.join(', ')}**.<br><br>Which AI Provider will power them? Type the number:<br>1. Google Gemini<br>2. OpenAI (ChatGPT)<br>3. Groq (Fast Open-Source)<br>4. OpenRouter (Access to 100+ models like Claude & DeepSeek)`, "agent");
                                 renderUIBasedOnStage();
                             }, 500);
                         }
+                        break;
+
+                    case STAGES.ASK_PROVIDER:
+                        if (inputVal === "1") { appState.apiProvider = "gemini"; appState.apiProviderName = "Google Gemini"; }
+                        else if (inputVal === "2") { appState.apiProvider = "openai"; appState.apiProviderName = "OpenAI"; }
+                        else if (inputVal === "3") { appState.apiProvider = "groq"; appState.apiProviderName = "Groq"; }
+                        else if (inputVal === "4") { appState.apiProvider = "openrouter"; appState.apiProviderName = "OpenRouter"; }
+                        else {
+                            setTimeout(() => addMessageToUI("System", "Invalid choice. Please type 1, 2, 3, or 4.", "agent"), 500);
+                            return;
+                        }
+                        
+                        appState.stage = STAGES.ASK_API_KEY;
+                        saveState();
+                        setTimeout(() => {
+                            addMessageToUI("System", `Excellent choice. Please paste your **${appState.apiProviderName} API Key** to bring them to life. (It stays securely in your browser).`, "agent");
+                            renderUIBasedOnStage();
+                        }, 500);
                         break;
 
                     case STAGES.ASK_API_KEY:
@@ -301,7 +311,7 @@
                         appState.stage = STAGES.READY;
                         saveState();
                         setTimeout(() => {
-                            addMessageToUI("System", `Setup Complete! 🎉<br><br>Welcome to TeamClubAI. What task would you like your team to collaborate on today?`, "agent");
+                            addMessageToUI("System", `Setup Complete! 🎉<br><br>Powered by **${appState.apiProviderName}**. What task would you like your team to collaborate on today?`, "agent");
                             renderUIBasedOnStage();
                         }, 500);
                         break;
@@ -330,19 +340,17 @@
                         let userPrompt = "";
 
                         if (i === 0) {
-                            systemPrompt = `You are ${agentName}, the Lead Architect of the team. Your job is to create the initial comprehensive draft or codebase for the requested task. Be thorough and well-structured.`;
+                            systemPrompt = `You are ${agentName}, the Lead Architect of the team. Your job is to create the initial comprehensive draft or codebase for the requested task.`;
                             userPrompt = `Please provide the initial draft for this task: ${task}`;
-                        } 
-                        else if (i === appState.members.length - 1) {
-                            systemPrompt = `You are ${agentName}, the Senior Director. Your job is to review the original task and all the previous iterations/feedback from your team. Synthesize everything into the absolute final, perfect, production-ready response.`;
+                        } else if (i === appState.members.length - 1) {
+                            systemPrompt = `You are ${agentName}, the Senior Director. Synthesize the team's work into a final, perfect, production-ready response.`;
                             userPrompt = `${currentContext}\n\nPlease provide the final, perfected output combining the above work and feedback.`;
-                        } 
-                        else {
-                            systemPrompt = `You are ${agentName}, a critical Code/Content Reviewer. Your job is to look at the work done so far, point out flaws, bugs, security issues, or missing elements. DO NOT rewrite the entire thing, just provide a clear list of required improvements and fixes.`;
+                        } else {
+                            systemPrompt = `You are ${agentName}, a critical Reviewer. Point out flaws, bugs, or missing elements in the current draft. DO NOT rewrite the entire thing, just provide a clear list of required improvements.`;
                             userPrompt = `Please review the latest iteration provided by your teammate:\n\n${lastOutput}`;
                         }
 
-                        const agentResponse = await callGeminiAPI(appState.apiKey, userPrompt, systemPrompt);
+                        const agentResponse = await callAIAPI(appState.apiProvider, appState.apiKey, userPrompt, systemPrompt);
                         
                         addMessageToUI(agentName, agentResponse, "agent");
                         appState.chatHistory.push({ sender: agentName, text: agentResponse });
@@ -352,7 +360,6 @@
                         currentContext += `--- Contribution by ${agentName} ---\n${agentResponse}\n\n`;
                         
                         updateStatus(i, "Finished");
-                        
                         await new Promise(res => setTimeout(res, 1000));
                     }
                     
@@ -368,28 +375,60 @@
                 }
             }
 
-            async function callGeminiAPI(apiKey, prompt, systemInstruction) {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-                const payload = {
-                    contents: [{ parts: [{ text: prompt }] }],
-                    systemInstruction: { parts: [{ text: systemInstruction }] }
-                };
+            // --- Multi-Provider Universal API Caller ---
+            async function callAIAPI(provider, apiKey, prompt, systemInstruction) {
+                if (provider === "gemini") {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+                    const payload = { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: systemInstruction }] } };
+                    
+                    const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
+                } 
+                else {
+                    // Standard OpenAI-Compatible Format (works for OpenAI, Groq, and OpenRouter)
+                    let url = "";
+                    let modelName = "";
 
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+                    if (provider === "openai") {
+                        url = "https://api.openai.com/v1/chat/completions";
+                        modelName = "gpt-4o-mini"; 
+                    } else if (provider === "groq") {
+                        url = "https://api.groq.com/openai/v1/chat/completions";
+                        modelName = "llama3-8b-8192"; 
+                    } else if (provider === "openrouter") {
+                        url = "https://openrouter.ai/api/v1/chat/completions";
+                        modelName = "google/gemini-2.5-flash"; // OpenRouter default fallback routing
+                    }
 
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error?.message || `HTTP ${response.status}`);
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${apiKey}`,
+                            "HTTP-Referer": "https://teamclubai.github.io", // Required by OpenRouter
+                            "X-Title": "TeamClubAI" // Required by OpenRouter
+                        },
+                        body: JSON.stringify({
+                            model: modelName,
+                            messages: [
+                                { role: "system", content: systemInstruction },
+                                { role: "user", content: prompt }
+                            ]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error?.message || `API Error: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    return data.choices[0].message.content;
                 }
-
-                const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
             }
 
+            // --- UI Helpers ---
             function renderUIBasedOnStage() {
                 singleLineInput.classList.add("hidden");
                 passwordInput.classList.add("hidden");
@@ -399,9 +438,7 @@
                     singleLineInput.classList.remove("hidden");
                     singleLineInput.placeholder = "Enter your name...";
                     singleLineInput.focus();
-                    if(chatBox.children.length === 0) {
-                        addMessageToUI("System", "Welcome to TeamClubAI! 🚀<br><br>Let's set up your team. First, what is your name?", "agent");
-                    }
+                    if(chatBox.children.length === 0) addMessageToUI("System", "Welcome to TeamClubAI! 🚀<br><br>Let's set up your team. First, what is your name?", "agent");
                 } 
                 else if (appState.stage === STAGES.ASK_COUNT) {
                     singleLineInput.classList.remove("hidden");
@@ -413,8 +450,14 @@
                     singleLineInput.placeholder = `Name for Member ${appState.members.length + 1}...`;
                     singleLineInput.focus();
                 } 
+                else if (appState.stage === STAGES.ASK_PROVIDER) {
+                    singleLineInput.classList.remove("hidden");
+                    singleLineInput.placeholder = `Type 1, 2, 3, or 4...`;
+                    singleLineInput.focus();
+                }
                 else if (appState.stage === STAGES.ASK_API_KEY) {
                     passwordInput.classList.remove("hidden");
+                    passwordInput.placeholder = `Paste your ${appState.apiProviderName} API key...`;
                     passwordInput.focus();
                 } 
                 else if (appState.stage === STAGES.READY) {
@@ -424,23 +467,16 @@
                     
                     if(chatBox.children.length === 0) {
                         addMessageToUI("System", `Welcome back, **${appState.userName}**! Your team is ready.`, "agent");
-                        appState.chatHistory.forEach(msg => {
-                            const type = msg.sender === appState.userName ? "user" : "agent";
-                            addMessageToUI(msg.sender, msg.text, type);
-                        });
+                        appState.chatHistory.forEach(msg => addMessageToUI(msg.sender, msg.text, msg.sender === appState.userName ? "user" : "agent"));
                     }
                 }
             }
 
             function renderSidebar() {
                 sidebarTitle.innerText = `${appState.userName}'s Team`;
-                statusList.innerHTML = "";
+                statusList.innerHTML = `<li><small>Powered by: ${appState.apiProviderName}</small></li>`;
                 appState.members.forEach((name, index) => {
-                    let icon = "🤖";
-                    if(index === 0) icon = "🧠"; 
-                    if(index === appState.members.length - 1) icon = "👑"; 
-                    if(index > 0 && index < appState.members.length - 1) icon = "🔍"; 
-
+                    let icon = index === 0 ? "🧠" : (index === appState.members.length - 1 ? "👑" : "🔍");
                     const li = document.createElement("li");
                     li.id = `agent-${index}`;
                     li.innerHTML = `${icon} <strong>${name}</strong>: <span>Waiting for task...</span>`;
@@ -451,13 +487,9 @@
             function updateStatus(agentIndex, statusText) {
                 const el = document.getElementById(`agent-${agentIndex}`);
                 if(!el) return;
-                const span = el.querySelector('span');
-                span.innerText = statusText;
-                
+                el.querySelector('span').innerText = statusText;
                 el.classList.remove("active-agent", "error-agent");
-                if (statusText === "Working...") {
-                    el.classList.add("active-agent");
-                }
+                if (statusText === "Working...") el.classList.add("active-agent");
             }
 
             function resetAllStatuses() {
@@ -470,7 +502,6 @@
                 notification.style.backgroundColor = type === "success" ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)";
                 notification.style.color = type === "success" ? "var(--success)" : "var(--error)";
                 notification.style.border = `1px solid ${type === "success" ? "var(--success)" : "var(--error)"}`;
-                
                 setTimeout(() => notification.style.display = "none", 4000);
             }
 
@@ -482,13 +513,11 @@
             function addMessageToUI(sender, text, type) {
                 const msgDiv = document.createElement("div");
                 msgDiv.className = `message ${type}`;
-                
                 let formattedText = text
                     .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>') 
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
                     .replace(/\*(.*?)\*/g, '<em>$1</em>') 
                     .replace(/\n/g, '<br>'); 
-                
                 msgDiv.innerHTML = `<strong>${sender}:</strong><br><br>${formattedText}`;
                 chatBox.appendChild(msgDiv);
                 chatBox.scrollTop = chatBox.scrollHeight; 
