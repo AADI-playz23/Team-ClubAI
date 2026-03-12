@@ -3,45 +3,497 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI-Squad | Multi-Agent Team</title>
-    <link rel="stylesheet" href="style.css">
+    <title>TeamClubAI | Conversational Multi-Agent Team</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: rgba(25, 28, 41, 0.7);
+            --accent: #7c3aed;
+            --accent-hover: #6d28d9;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, #2e1065, transparent 40%),
+                              radial-gradient(circle at bottom left, #172554, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 { color: #fff; font-size: 2rem; margin-bottom: 5px; }
+        header h1 span { color: var(--accent); }
+        header p { color: var(--text-muted); }
+
+        input[type="password"], input[type="text"], textarea {
+            flex: 1;
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            outline: none;
+            transition: border-color 0.3s;
+            font-size: 1rem;
+        }
+
+        input[type="password"]:focus, input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s ease;
+            white-space: nowrap;
+        }
+
+        button:hover { background: var(--accent-hover); }
+        button:disabled { background: var(--text-muted); cursor: not-allowed; }
+        button.secondary { background: transparent; border: 1px solid var(--accent); }
+        button.secondary:hover { background: rgba(124, 58, 237, 0.1); }
+        button.danger { background: transparent; border: 1px solid var(--error); color: var(--error); }
+        button.danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+        #notification {
+            display: none;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .main-workspace { 
+            display: grid; 
+            grid-template-columns: 2fr 1fr; 
+            gap: 20px; 
+        }
+
+        @media (max-width: 768px) {
+            .main-workspace { grid-template-columns: 1fr; }
+            .container { padding: 15px; }
+            header { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
+
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-box {
+            height: 500px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+
+        .message { padding: 15px; border-radius: 8px; line-height: 1.6; font-size: 0.95rem; animation: fadeIn 0.3s ease; }
+        .message.user { background: rgba(255, 255, 255, 0.1); align-self: flex-end; max-width: 85%; }
+        .message.agent { background: rgba(124, 58, 237, 0.15); border-left: 4px solid var(--accent); align-self: flex-start; max-width: 95%; }
+        .message.system { background: transparent; color: var(--text-muted); text-align: center; font-style: italic; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Markdown rendering styles */
+        .message pre { background: #000; padding: 12px; border-radius: 6px; overflow-x: auto; margin-top: 10px; margin-bottom: 10px; }
+        .message code { font-family: monospace; color: #a5b4fc; }
+        .message p { margin-bottom: 10px; }
+
+        .input-area { display: flex; flex-direction: column; gap: 10px; }
+        .input-wrapper { display: flex; gap: 10px; width: 100%; }
+        textarea { height: 60px; resize: none; }
+        .input-actions { display: flex; gap: 10px; justify-content: space-between; }
+        
+        .hidden { display: none !important; }
+
+        .agent-status { background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 8px; height: fit-content; }
+        .agent-status h3 { margin-bottom: 15px; font-size: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
+        .agent-status ul { list-style: none; padding: 0; }
+        .agent-status li { margin-bottom: 15px; color: var(--text-muted); padding: 12px; background: rgba(255,255,255,0.05); border-radius: 6px; transition: all 0.3s ease;}
+        
+        .active-agent { color: var(--success) !important; border-left: 4px solid var(--success); background: rgba(16, 185, 129, 0.1) !important; transform: translateX(5px); }
+        .error-agent { color: var(--error) !important; border-left: 4px solid var(--error); }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>✨ AI-Squad <span>Orchestrator</span></h1>
-            <p>Your browser-based, serverless AI development team.</p>
+            <div>
+                <h1>✨ TeamClubAI <span>Workspace</span></h1>
+                <p>Your collaborative AI dev team.</p>
+            </div>
+            <button id="resetAppBtn" class="danger">Reset Team</button>
         </header>
 
-        <div class="settings-panel">
-            <label for="apiKey">Gemini API Key (Runs locally in your browser):</label>
-            <input type="password" id="apiKey" placeholder="Paste your API key here...">
-            <button id="saveKeyBtn">Save Key</button>
-        </div>
+        <div id="notification"></div>
 
         <div class="main-workspace">
             <div class="chat-section">
                 <div id="chatBox" class="chat-box">
-                    <div class="message system">Welcome to AI-Squad! Enter your API key and give the team a task.</div>
-                </div>
+                    </div>
                 
                 <div class="input-area">
-                    <textarea id="taskInput" placeholder="E.g., Write a Python script for a to-do list app..."></textarea>
-                    <button id="sendBtn">Deploy Team</button>
-                    <button id="clearBtn" class="secondary">Clear Memory</button>
+                    <div class="input-wrapper">
+                        <input type="text" id="singleLineInput" class="hidden" placeholder="Type your answer here..." autocomplete="off">
+                        <input type="password" id="passwordInput" class="hidden" placeholder="Paste your Gemini API key here..." autocomplete="off">
+                        <textarea id="taskInput" class="hidden" placeholder="Describe the task for your team..."></textarea>
+                        
+                        <button id="sendBtn">Send</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="agent-status">
-                <h3>Team Status</h3>
+            <div class="agent-status" id="sidebarPanel">
+                <h3 id="sidebarTitle">Team Members</h3>
                 <ul id="statusList">
-                    <li id="status-architect">🧠 <strong>The Architect:</strong> Waiting...</li>
-                    <li id="status-reviewer">🔍 <strong>The Reviewer:</strong> Waiting...</li>
-                    <li id="status-lead">👑 <strong>The Senior Lead:</strong> Waiting...</li>
+                    <li class="system">Complete setup to view team.</li>
                 </ul>
             </div>
         </div>
     </div>
-    <script src="app.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const chatBox = document.getElementById("chatBox");
+            const sendBtn = document.getElementById("sendBtn");
+            const singleLineInput = document.getElementById("singleLineInput");
+            const passwordInput = document.getElementById("passwordInput");
+            const taskInput = document.getElementById("taskInput");
+            const statusList = document.getElementById("statusList");
+            const resetAppBtn = document.getElementById("resetAppBtn");
+            const notification = document.getElementById("notification");
+            const sidebarTitle = document.getElementById("sidebarTitle");
+
+            const STAGES = { ASK_NAME: 0, ASK_COUNT: 1, ASK_MEMBERS: 2, ASK_API_KEY: 3, READY: 4 };
+
+            let appState = {
+                stage: STAGES.ASK_NAME,
+                userName: "",
+                memberCount: 0,
+                members: [],
+                apiKey: "",
+                chatHistory: [] 
+            };
+
+            const savedState = localStorage.getItem("teamclubai_state");
+            if (savedState) appState = JSON.parse(savedState);
+
+            renderUIBasedOnStage();
+
+            sendBtn.addEventListener("click", handleUserInput);
+            
+            [singleLineInput, passwordInput, taskInput].forEach(inputEl => {
+                inputEl.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleUserInput();
+                    }
+                });
+            });
+
+            resetAppBtn.addEventListener("click", () => {
+                if(confirm("Are you sure you want to reset your entire team setup and memory?")) {
+                    localStorage.removeItem("teamclubai_state");
+                    location.reload();
+                }
+            });
+
+            async function handleUserInput() {
+                let activeInput = null;
+                if (!singleLineInput.classList.contains("hidden")) { activeInput = singleLineInput; }
+                else if (!passwordInput.classList.contains("hidden")) { activeInput = passwordInput; }
+                else if (!taskInput.classList.contains("hidden")) { activeInput = taskInput; }
+
+                const inputVal = activeInput.value.trim();
+                if (!inputVal) return;
+
+                activeInput.value = ""; 
+
+                if (appState.stage !== STAGES.ASK_API_KEY) {
+                    addMessageToUI(appState.userName || "User", inputVal, "user");
+                } else {
+                    addMessageToUI(appState.userName, "••••••••••••••••", "user");
+                }
+
+                switch (appState.stage) {
+                    case STAGES.ASK_NAME:
+                        appState.userName = inputVal;
+                        appState.stage = STAGES.ASK_COUNT;
+                        saveState();
+                        setTimeout(() => {
+                            addMessageToUI("System", `Nice to meet you, **${appState.userName}**! How many AI team members do you want in your club? (Please enter a number between 2 and 5)`, "agent");
+                            renderUIBasedOnStage();
+                        }, 500);
+                        break;
+
+                    case STAGES.ASK_COUNT:
+                        const count = parseInt(inputVal);
+                        if (isNaN(count) || count < 2 || count > 5) {
+                            setTimeout(() => addMessageToUI("System", "Invalid input. Please enter a number between **2 and 5**.", "agent"), 500);
+                        } else {
+                            appState.memberCount = count;
+                            appState.stage = STAGES.ASK_MEMBERS;
+                            saveState();
+                            setTimeout(() => {
+                                addMessageToUI("System", `Awesome! You chose ${count} members. What would you like to name **Member 1**?`, "agent");
+                                renderUIBasedOnStage();
+                            }, 500);
+                        }
+                        break;
+
+                    case STAGES.ASK_MEMBERS:
+                        appState.members.push(inputVal);
+                        saveState();
+                        if (appState.members.length < appState.memberCount) {
+                            setTimeout(() => addMessageToUI("System", `Got it. What is the name of **Member ${appState.members.length + 1}**?`, "agent"), 500);
+                        } else {
+                            appState.stage = STAGES.ASK_API_KEY;
+                            saveState();
+                            setTimeout(() => {
+                                addMessageToUI("System", `Great names! Your team is: **${appState.members.join(', ')}**.<br><br>Finally, please paste your **Gemini API Key** to bring them to life. (It stays securely in your browser).`, "agent");
+                                renderUIBasedOnStage();
+                            }, 500);
+                        }
+                        break;
+
+                    case STAGES.ASK_API_KEY:
+                        appState.apiKey = inputVal;
+                        appState.stage = STAGES.READY;
+                        saveState();
+                        setTimeout(() => {
+                            addMessageToUI("System", `Setup Complete! 🎉<br><br>Welcome to TeamClubAI. What task would you like your team to collaborate on today?`, "agent");
+                            renderUIBasedOnStage();
+                        }, 500);
+                        break;
+
+                    case STAGES.READY:
+                        appState.chatHistory.push({ sender: appState.userName, text: inputVal });
+                        saveState();
+                        await runMultiAgentTeam(inputVal);
+                        break;
+                }
+            }
+
+            async function runMultiAgentTeam(task) {
+                sendBtn.disabled = true;
+                taskInput.disabled = true;
+
+                try {
+                    let currentContext = `Task Description: ${task}\n\n`;
+                    let lastOutput = "";
+
+                    for (let i = 0; i < appState.members.length; i++) {
+                        const agentName = appState.members[i];
+                        updateStatus(i, "Working...");
+
+                        let systemPrompt = "";
+                        let userPrompt = "";
+
+                        if (i === 0) {
+                            systemPrompt = `You are ${agentName}, the Lead Architect of the team. Your job is to create the initial comprehensive draft or codebase for the requested task. Be thorough and well-structured.`;
+                            userPrompt = `Please provide the initial draft for this task: ${task}`;
+                        } 
+                        else if (i === appState.members.length - 1) {
+                            systemPrompt = `You are ${agentName}, the Senior Director. Your job is to review the original task and all the previous iterations/feedback from your team. Synthesize everything into the absolute final, perfect, production-ready response.`;
+                            userPrompt = `${currentContext}\n\nPlease provide the final, perfected output combining the above work and feedback.`;
+                        } 
+                        else {
+                            systemPrompt = `You are ${agentName}, a critical Code/Content Reviewer. Your job is to look at the work done so far, point out flaws, bugs, security issues, or missing elements. DO NOT rewrite the entire thing, just provide a clear list of required improvements and fixes.`;
+                            userPrompt = `Please review the latest iteration provided by your teammate:\n\n${lastOutput}`;
+                        }
+
+                        const agentResponse = await callGeminiAPI(appState.apiKey, userPrompt, systemPrompt);
+                        
+                        addMessageToUI(agentName, agentResponse, "agent");
+                        appState.chatHistory.push({ sender: agentName, text: agentResponse });
+                        saveState();
+
+                        lastOutput = agentResponse;
+                        currentContext += `--- Contribution by ${agentName} ---\n${agentResponse}\n\n`;
+                        
+                        updateStatus(i, "Finished");
+                        
+                        await new Promise(res => setTimeout(res, 1000));
+                    }
+                    
+                    showNotification("Team collaboration complete!", "success");
+
+                } catch (error) {
+                    showNotification(`Error: ${error.message}`, "error");
+                    resetAllStatuses();
+                } finally {
+                    sendBtn.disabled = false;
+                    taskInput.disabled = false;
+                    taskInput.focus();
+                }
+            }
+
+            async function callGeminiAPI(apiKey, prompt, systemInstruction) {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: systemInstruction }] }
+                };
+
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error?.message || `HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
+            }
+
+            function renderUIBasedOnStage() {
+                singleLineInput.classList.add("hidden");
+                passwordInput.classList.add("hidden");
+                taskInput.classList.add("hidden");
+
+                if (appState.stage === STAGES.ASK_NAME) {
+                    singleLineInput.classList.remove("hidden");
+                    singleLineInput.placeholder = "Enter your name...";
+                    singleLineInput.focus();
+                    if(chatBox.children.length === 0) {
+                        addMessageToUI("System", "Welcome to TeamClubAI! 🚀<br><br>Let's set up your team. First, what is your name?", "agent");
+                    }
+                } 
+                else if (appState.stage === STAGES.ASK_COUNT) {
+                    singleLineInput.classList.remove("hidden");
+                    singleLineInput.placeholder = "Enter a number (2 to 5)...";
+                    singleLineInput.focus();
+                } 
+                else if (appState.stage === STAGES.ASK_MEMBERS) {
+                    singleLineInput.classList.remove("hidden");
+                    singleLineInput.placeholder = `Name for Member ${appState.members.length + 1}...`;
+                    singleLineInput.focus();
+                } 
+                else if (appState.stage === STAGES.ASK_API_KEY) {
+                    passwordInput.classList.remove("hidden");
+                    passwordInput.focus();
+                } 
+                else if (appState.stage === STAGES.READY) {
+                    taskInput.classList.remove("hidden");
+                    taskInput.focus();
+                    renderSidebar();
+                    
+                    if(chatBox.children.length === 0) {
+                        addMessageToUI("System", `Welcome back, **${appState.userName}**! Your team is ready.`, "agent");
+                        appState.chatHistory.forEach(msg => {
+                            const type = msg.sender === appState.userName ? "user" : "agent";
+                            addMessageToUI(msg.sender, msg.text, type);
+                        });
+                    }
+                }
+            }
+
+            function renderSidebar() {
+                sidebarTitle.innerText = `${appState.userName}'s Team`;
+                statusList.innerHTML = "";
+                appState.members.forEach((name, index) => {
+                    let icon = "🤖";
+                    if(index === 0) icon = "🧠"; 
+                    if(index === appState.members.length - 1) icon = "👑"; 
+                    if(index > 0 && index < appState.members.length - 1) icon = "🔍"; 
+
+                    const li = document.createElement("li");
+                    li.id = `agent-${index}`;
+                    li.innerHTML = `${icon} <strong>${name}</strong>: <span>Waiting for task...</span>`;
+                    statusList.appendChild(li);
+                });
+            }
+
+            function updateStatus(agentIndex, statusText) {
+                const el = document.getElementById(`agent-${agentIndex}`);
+                if(!el) return;
+                const span = el.querySelector('span');
+                span.innerText = statusText;
+                
+                el.classList.remove("active-agent", "error-agent");
+                if (statusText === "Working...") {
+                    el.classList.add("active-agent");
+                }
+            }
+
+            function resetAllStatuses() {
+                appState.members.forEach((_, i) => updateStatus(i, "Waiting for task..."));
+            }
+
+            function showNotification(message, type) {
+                notification.innerHTML = message;
+                notification.style.display = "block";
+                notification.style.backgroundColor = type === "success" ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)";
+                notification.style.color = type === "success" ? "var(--success)" : "var(--error)";
+                notification.style.border = `1px solid ${type === "success" ? "var(--success)" : "var(--error)"}`;
+                
+                setTimeout(() => notification.style.display = "none", 4000);
+            }
+
+            function saveState() {
+                if(appState.chatHistory.length > 30) appState.chatHistory = appState.chatHistory.slice(-30);
+                localStorage.setItem("teamclubai_state", JSON.stringify(appState));
+            }
+
+            function addMessageToUI(sender, text, type) {
+                const msgDiv = document.createElement("div");
+                msgDiv.className = `message ${type}`;
+                
+                let formattedText = text
+                    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>') 
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>') 
+                    .replace(/\n/g, '<br>'); 
+                
+                msgDiv.innerHTML = `<strong>${sender}:</strong><br><br>${formattedText}`;
+                chatBox.appendChild(msgDiv);
+                chatBox.scrollTop = chatBox.scrollHeight; 
+            }
+        });
+    </script>
 </body>
 </html>
