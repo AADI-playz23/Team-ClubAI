@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Squad | Multi-Agent Team</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✨ AI-Squad <span>Orchestrator</span></h1>
+            <p>Your browser-based, serverless AI development team.</p>
+        </header>
+
+        <div class="settings-panel">
+            <label for="apiKey">Gemini API Key (Runs locally in your browser):</label>
+            <input type="password" id="apiKey" placeholder="Paste your API key here...">
+            <button id="saveKeyBtn">Save Key</button>
+        </div>
+
+        <div class="main-workspace">
+            <div class="chat-section">
+                <div id="chatBox" class="chat-box">
+                    <div class="message system">Welcome to AI-Squad! Enter your API key and give the team a task.</div>
+                </div>
+                
+                <div class="input-area">
+                    <textarea id="taskInput" placeholder="E.g., Write a Python script for a to-do list app..."></textarea>
+                    <button id="sendBtn">Deploy Team</button>
+                    <button id="clearBtn" class="secondary">Clear Memory</button>
+                </div>
+            </div>
+
+            <div class="agent-status">
+                <h3>Team Status</h3>
+                <ul id="statusList">
+                    <li id="status-architect">🧠 <strong>The Architect:</strong> Waiting...</li>
+                    <li id="status-reviewer">🔍 <strong>The Reviewer:</strong> Waiting...</li>
+                    <li id="status-lead">👑 <strong>The Senior Lead:</strong> Waiting...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
