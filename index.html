@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeamClubAI | Conversational Multi-Agent Team</title>
+    <title>TeamClubAI | Heterogeneous Multi-Agent Workspace</title>
     <style>
         :root {
             --bg-color: #0f111a;
@@ -14,6 +14,10 @@
             --text-muted: #94a3b8;
             --success: #10b981;
             --error: #ef4444;
+            --gemini-color: #4285F4;
+            --openai-color: #10a37f;
+            --groq-color: #f55036;
+            --openrouter-color: #a855f7;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -44,63 +48,33 @@
             gap: 20px;
         }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
+        header { display: flex; justify-content: space-between; align-items: center; }
         header h1 { color: #fff; font-size: 2rem; margin-bottom: 5px; }
         header h1 span { color: var(--accent); }
         header p { color: var(--text-muted); }
 
         input[type="password"], input[type="text"], textarea {
-            flex: 1;
-            width: 100%;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: #fff;
-            outline: none;
-            transition: border-color 0.3s;
-            font-size: 1rem;
+            flex: 1; width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff;
+            outline: none; transition: border-color 0.3s; font-size: 1rem;
         }
-
         input[type="password"]:focus, input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
 
         button {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s ease;
-            white-space: nowrap;
+            background: var(--accent); color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s ease; white-space: nowrap;
         }
-
         button:hover { background: var(--accent-hover); }
         button:disabled { background: var(--text-muted); cursor: not-allowed; }
         button.danger { background: transparent; border: 1px solid var(--error); color: var(--error); }
         button.danger:hover { background: rgba(239, 68, 68, 0.1); }
 
         #notification {
-            display: none;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.9rem;
+            display: none; padding: 10px; border-radius: 8px; text-align: center;
+            font-weight: bold; font-size: 0.9rem; margin-bottom: 10px;
         }
 
-        .main-workspace { 
-            display: grid; 
-            grid-template-columns: 2fr 1fr; 
-            gap: 20px; 
-        }
-
+        .main-workspace { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         @media (max-width: 768px) {
             .main-workspace { grid-template-columns: 1fr; }
             .container { padding: 15px; }
@@ -110,22 +84,20 @@
         .chat-section { display: flex; flex-direction: column; gap: 15px; }
 
         .chat-box {
-            height: 500px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            scroll-behavior: smooth;
+            height: 500px; overflow-y: auto; background: rgba(0, 0, 0, 0.3); border-radius: 8px;
+            padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth;
         }
 
         .message { padding: 15px; border-radius: 8px; line-height: 1.6; font-size: 0.95rem; animation: fadeIn 0.3s ease; }
         .message.user { background: rgba(255, 255, 255, 0.1); align-self: flex-end; max-width: 85%; }
-        .message.agent { background: rgba(124, 58, 237, 0.15); border-left: 4px solid var(--accent); align-self: flex-start; max-width: 95%; }
+        .message.agent { background: rgba(255, 255, 255, 0.05); border-left: 4px solid var(--accent); align-self: flex-start; max-width: 95%; }
         .message.system { background: transparent; color: var(--text-muted); text-align: center; font-style: italic; }
         
+        .agent.gemini { border-left-color: var(--gemini-color); }
+        .agent.openai { border-left-color: var(--openai-color); }
+        .agent.groq { border-left-color: var(--groq-color); }
+        .agent.openrouter { border-left-color: var(--openrouter-color); }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .message pre { background: #000; padding: 12px; border-radius: 6px; overflow-x: auto; margin-top: 10px; margin-bottom: 10px; }
@@ -135,7 +107,6 @@
         .input-area { display: flex; flex-direction: column; gap: 10px; }
         .input-wrapper { display: flex; gap: 10px; width: 100%; }
         textarea { height: 60px; resize: none; }
-        
         .hidden { display: none !important; }
 
         .agent-status { background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 8px; height: fit-content; }
@@ -152,7 +123,7 @@
         <header>
             <div>
                 <h1>✨ TeamClubAI <span>Workspace</span></h1>
-                <p>Your collaborative, multi-API AI dev team.</p>
+                <p>Heterogeneous Multi-Model AI Dev Team.</p>
             </div>
             <button id="resetAppBtn" class="danger">Reset Team</button>
         </header>
@@ -165,18 +136,18 @@
                 
                 <div class="input-area">
                     <div class="input-wrapper">
-                        <input type="text" id="singleLineInput" class="hidden" placeholder="Type your answer here..." autocomplete="off">
-                        <input type="password" id="passwordInput" class="hidden" placeholder="Paste your API key here..." autocomplete="off">
-                        <textarea id="taskInput" class="hidden" placeholder="Describe the task for your team..."></textarea>
+                        <input type="text" id="singleLineInput" class="hidden" placeholder="Type here..." autocomplete="off">
+                        <input type="password" id="passwordInput" class="hidden" placeholder="Paste API key here..." autocomplete="off">
+                        <textarea id="taskInput" class="hidden" placeholder="Give your multi-model team a task or ask them to talk..."></textarea>
                         <button id="sendBtn">Send</button>
                     </div>
                 </div>
             </div>
 
             <div class="agent-status" id="sidebarPanel">
-                <h3 id="sidebarTitle">Team Members</h3>
+                <h3 id="sidebarTitle">Active Models</h3>
                 <ul id="statusList">
-                    <li class="system">Complete setup to view team.</li>
+                    <li class="system">Complete setup to initialize models.</li>
                 </ul>
             </div>
         </div>
@@ -194,16 +165,16 @@
             const notification = document.getElementById("notification");
             const sidebarTitle = document.getElementById("sidebarTitle");
 
-            const STAGES = { ASK_NAME: 0, ASK_COUNT: 1, ASK_MEMBERS: 2, ASK_PROVIDER: 3, ASK_API_KEY: 4, READY: 5 };
+            const STAGES = { ASK_NAME: 0, ASK_COUNT: 1, ASK_PROVIDERS: 2, ASK_API_KEYS: 3, READY: 4 };
 
             let appState = {
                 stage: STAGES.ASK_NAME,
                 userName: "",
                 memberCount: 0,
-                members: [],
-                apiProvider: "", // "gemini", "openai", "groq", "openrouter"
-                apiProviderName: "",
-                apiKey: "",
+                agents: [], // Array of { id: 1, provider: "gemini", providerName: "Google Gemini" }
+                uniqueProvidersNeeded: [],
+                apiKeys: {}, // Maps provider ID to key, e.g., { gemini: "key..." }
+                setupIndices: { currentAgentIndex: 0, currentKeyIndex: 0 },
                 chatHistory: [] 
             };
 
@@ -224,7 +195,7 @@
             });
 
             resetAppBtn.addEventListener("click", () => {
-                if(confirm("Are you sure you want to reset your entire team setup and memory?")) {
+                if(confirm("Warning: This will delete your team config and API keys from browser memory. Proceed?")) {
                     localStorage.removeItem("teamclubai_state");
                     location.reload();
                 }
@@ -238,10 +209,9 @@
 
                 const inputVal = activeInput.value.trim();
                 if (!inputVal) return;
-
                 activeInput.value = ""; 
 
-                if (appState.stage !== STAGES.ASK_API_KEY) {
+                if (appState.stage !== STAGES.ASK_API_KEYS) {
                     addMessageToUI(appState.userName || "User", inputVal, "user");
                 } else {
                     addMessageToUI(appState.userName, "••••••••••••••••", "user");
@@ -253,7 +223,7 @@
                         appState.stage = STAGES.ASK_COUNT;
                         saveState();
                         setTimeout(() => {
-                            addMessageToUI("System", `Nice to meet you, **${appState.userName}**! How many AI team members do you want in your club? (Enter 2 to 5)`, "agent");
+                            addMessageToUI("System", `Welcome, **${appState.userName}**. How many AI models do you want in this conversation? (Enter a number between 2 and 5)`, "system");
                             renderUIBasedOnStage();
                         }, 500);
                         break;
@@ -261,59 +231,66 @@
                     case STAGES.ASK_COUNT:
                         const count = parseInt(inputVal);
                         if (isNaN(count) || count < 2 || count > 5) {
-                            setTimeout(() => addMessageToUI("System", "Invalid input. Please enter a number between **2 and 5**.", "agent"), 500);
+                            setTimeout(() => addMessageToUI("System", "Please enter a valid number between **2 and 5**.", "system"), 500);
                         } else {
                             appState.memberCount = count;
-                            appState.stage = STAGES.ASK_MEMBERS;
+                            appState.stage = STAGES.ASK_PROVIDERS;
+                            appState.setupIndices.currentAgentIndex = 0;
                             saveState();
                             setTimeout(() => {
-                                addMessageToUI("System", `Awesome! What would you like to name **Member 1**?`, "agent");
-                                renderUIBasedOnStage();
+                                askForNextProvider();
                             }, 500);
                         }
                         break;
 
-                    case STAGES.ASK_MEMBERS:
-                        appState.members.push(inputVal);
-                        saveState();
-                        if (appState.members.length < appState.memberCount) {
-                            setTimeout(() => addMessageToUI("System", `Got it. What is the name of **Member ${appState.members.length + 1}**?`, "agent"), 500);
-                        } else {
-                            appState.stage = STAGES.ASK_PROVIDER;
-                            saveState();
-                            setTimeout(() => {
-                                addMessageToUI("System", `Great names! Your team is: **${appState.members.join(', ')}**.<br><br>Which AI Provider will power them? Type the number:<br>1. Google Gemini<br>2. OpenAI (ChatGPT)<br>3. Groq (Fast Open-Source)<br>4. OpenRouter (Access to 100+ models like Claude & DeepSeek)`, "agent");
-                                renderUIBasedOnStage();
-                            }, 500);
-                        }
-                        break;
-
-                    case STAGES.ASK_PROVIDER:
-                        if (inputVal === "1") { appState.apiProvider = "gemini"; appState.apiProviderName = "Google Gemini"; }
-                        else if (inputVal === "2") { appState.apiProvider = "openai"; appState.apiProviderName = "OpenAI"; }
-                        else if (inputVal === "3") { appState.apiProvider = "groq"; appState.apiProviderName = "Groq"; }
-                        else if (inputVal === "4") { appState.apiProvider = "openrouter"; appState.apiProviderName = "OpenRouter"; }
+                    case STAGES.ASK_PROVIDERS:
+                        let providerID = "", providerName = "";
+                        if (inputVal === "1") { providerID = "gemini"; providerName = "Google Gemini"; }
+                        else if (inputVal === "2") { providerID = "openai"; providerName = "OpenAI"; }
+                        else if (inputVal === "3") { providerID = "groq"; providerName = "Groq (Llama 3)"; }
+                        else if (inputVal === "4") { providerID = "openrouter"; providerName = "OpenRouter"; }
                         else {
-                            setTimeout(() => addMessageToUI("System", "Invalid choice. Please type 1, 2, 3, or 4.", "agent"), 500);
+                            setTimeout(() => addMessageToUI("System", "Invalid choice. Please type 1, 2, 3, or 4.", "system"), 500);
                             return;
                         }
+
+                        appState.agents.push({
+                            id: appState.setupIndices.currentAgentIndex + 1,
+                            provider: providerID,
+                            providerName: providerName
+                        });
+
+                        appState.setupIndices.currentAgentIndex++;
                         
-                        appState.stage = STAGES.ASK_API_KEY;
-                        saveState();
-                        setTimeout(() => {
-                            addMessageToUI("System", `Excellent choice. Please paste your **${appState.apiProviderName} API Key** to bring them to life. (It stays securely in your browser).`, "agent");
-                            renderUIBasedOnStage();
-                        }, 500);
+                        if (appState.setupIndices.currentAgentIndex < appState.memberCount) {
+                            saveState();
+                            setTimeout(() => askForNextProvider(), 500);
+                        } else {
+                            // Deduplicate providers so we don't ask for the Gemini key twice if they picked it twice
+                            appState.uniqueProvidersNeeded = [...new Set(appState.agents.map(a => a.provider))];
+                            appState.stage = STAGES.ASK_API_KEYS;
+                            appState.setupIndices.currentKeyIndex = 0;
+                            saveState();
+                            setTimeout(() => askForNextKey(), 500);
+                        }
                         break;
 
-                    case STAGES.ASK_API_KEY:
-                        appState.apiKey = inputVal;
-                        appState.stage = STAGES.READY;
-                        saveState();
-                        setTimeout(() => {
-                            addMessageToUI("System", `Setup Complete! 🎉<br><br>Powered by **${appState.apiProviderName}**. What task would you like your team to collaborate on today?`, "agent");
-                            renderUIBasedOnStage();
-                        }, 500);
+                    case STAGES.ASK_API_KEYS:
+                        const currentProviderToKey = appState.uniqueProvidersNeeded[appState.setupIndices.currentKeyIndex];
+                        appState.apiKeys[currentProviderToKey] = inputVal;
+                        appState.setupIndices.currentKeyIndex++;
+
+                        if (appState.setupIndices.currentKeyIndex < appState.uniqueProvidersNeeded.length) {
+                            saveState();
+                            setTimeout(() => askForNextKey(), 500);
+                        } else {
+                            appState.stage = STAGES.READY;
+                            saveState();
+                            setTimeout(() => {
+                                addMessageToUI("System", `Models Initialized! 🎉<br><br>Your team is ready. Try typing: *"Say hello to each other and introduce yourselves."*`, "system");
+                                renderUIBasedOnStage();
+                            }, 500);
+                        }
                         break;
 
                     case STAGES.READY:
@@ -324,46 +301,60 @@
                 }
             }
 
+            // Setup Flow Helpers
+            function askForNextProvider() {
+                const agentNum = appState.setupIndices.currentAgentIndex + 1;
+                addMessageToUI("System", `Which API should power **Agent ${agentNum}**?<br>Type the number:<br>1. Google Gemini<br>2. OpenAI (ChatGPT)<br>3. Groq (Llama 3)<br>4. OpenRouter`, "system");
+                renderUIBasedOnStage();
+            }
+
+            function askForNextKey() {
+                const providerID = appState.uniqueProvidersNeeded[appState.setupIndices.currentKeyIndex];
+                let friendlyName = providerID.charAt(0).toUpperCase() + providerID.slice(1);
+                addMessageToUI("System", `Please securely paste your **${friendlyName} API Key**:`, "system");
+                renderUIBasedOnStage();
+            }
+
+            // Execution Flow
             async function runMultiAgentTeam(task) {
                 sendBtn.disabled = true;
                 taskInput.disabled = true;
 
                 try {
-                    let currentContext = `Task Description: ${task}\n\n`;
+                    let currentContext = `User Request: ${task}\n\n`;
                     let lastOutput = "";
 
-                    for (let i = 0; i < appState.members.length; i++) {
-                        const agentName = appState.members[i];
-                        updateStatus(i, "Working...");
+                    for (let i = 0; i < appState.agents.length; i++) {
+                        const currentAgent = appState.agents[i];
+                        const agentDisplayName = `Agent ${currentAgent.id} (${currentAgent.providerName})`;
+                        const apiKey = appState.apiKeys[currentAgent.provider];
+                        
+                        updateStatus(currentAgent.id, "Generating...");
 
-                        let systemPrompt = "";
-                        let userPrompt = "";
-
-                        if (i === 0) {
-                            systemPrompt = `You are ${agentName}, the Lead Architect of the team. Your job is to create the initial comprehensive draft or codebase for the requested task.`;
-                            userPrompt = `Please provide the initial draft for this task: ${task}`;
-                        } else if (i === appState.members.length - 1) {
-                            systemPrompt = `You are ${agentName}, the Senior Director. Synthesize the team's work into a final, perfect, production-ready response.`;
-                            userPrompt = `${currentContext}\n\nPlease provide the final, perfected output combining the above work and feedback.`;
+                        // The System prompt specifically tells them who they are
+                        let systemPrompt = `You are an AI model powered by ${currentAgent.providerName}. You are acting as Agent ${currentAgent.id} in a team of ${appState.agents.length} AI models. Respond organically to the user's prompt or the conversation generated by your fellow AI models. Embrace your identity as ${currentAgent.providerName}.`;
+                        
+                        let userPrompt = `Here is the original User Request: "${task}"\n\n`;
+                        if (i > 0) {
+                            userPrompt += `Here is the conversation so far from your fellow AI team members:\n${currentContext}\n\nPlease add your perspective, output, or critique.`;
                         } else {
-                            systemPrompt = `You are ${agentName}, a critical Reviewer. Point out flaws, bugs, or missing elements in the current draft. DO NOT rewrite the entire thing, just provide a clear list of required improvements.`;
-                            userPrompt = `Please review the latest iteration provided by your teammate:\n\n${lastOutput}`;
+                            userPrompt += `Please start the task or conversation.`;
                         }
 
-                        const agentResponse = await callAIAPI(appState.apiProvider, appState.apiKey, userPrompt, systemPrompt);
+                        const agentResponse = await callAIAPI(currentAgent.provider, apiKey, userPrompt, systemPrompt);
                         
-                        addMessageToUI(agentName, agentResponse, "agent");
-                        appState.chatHistory.push({ sender: agentName, text: agentResponse });
+                        addMessageToUI(agentDisplayName, agentResponse, `agent ${currentAgent.provider}`);
+                        appState.chatHistory.push({ sender: agentDisplayName, text: agentResponse, cssClass: `agent ${currentAgent.provider}` });
                         saveState();
 
                         lastOutput = agentResponse;
-                        currentContext += `--- Contribution by ${agentName} ---\n${agentResponse}\n\n`;
+                        currentContext += `--- Response from ${agentDisplayName} ---\n${agentResponse}\n\n`;
                         
-                        updateStatus(i, "Finished");
-                        await new Promise(res => setTimeout(res, 1000));
+                        updateStatus(currentAgent.id, "Waiting");
+                        await new Promise(res => setTimeout(res, 1200));
                     }
                     
-                    showNotification("Team collaboration complete!", "success");
+                    showNotification("Turn complete.", "success");
 
                 } catch (error) {
                     showNotification(`Error: ${error.message}`, "error");
@@ -375,21 +366,18 @@
                 }
             }
 
-            // --- Multi-Provider Universal API Caller ---
             async function callAIAPI(provider, apiKey, prompt, systemInstruction) {
                 if (provider === "gemini") {
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
                     const payload = { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: systemInstruction }] } };
                     
                     const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    if (!response.ok) throw new Error(`Gemini API Error: ${response.status}`);
                     const data = await response.json();
                     return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
                 } 
                 else {
-                    // Standard OpenAI-Compatible Format (works for OpenAI, Groq, and OpenRouter)
-                    let url = "";
-                    let modelName = "";
+                    let url = "", modelName = "";
 
                     if (provider === "openai") {
                         url = "https://api.openai.com/v1/chat/completions";
@@ -399,7 +387,7 @@
                         modelName = "llama3-8b-8192"; 
                     } else if (provider === "openrouter") {
                         url = "https://openrouter.ai/api/v1/chat/completions";
-                        modelName = "google/gemini-2.5-flash"; // OpenRouter default fallback routing
+                        modelName = "google/gemini-2.5-flash"; 
                     }
 
                     const response = await fetch(url, {
@@ -407,8 +395,8 @@
                         headers: {
                             "Content-Type": "application/json",
                             "Authorization": `Bearer ${apiKey}`,
-                            "HTTP-Referer": "https://teamclubai.github.io", // Required by OpenRouter
-                            "X-Title": "TeamClubAI" // Required by OpenRouter
+                            "HTTP-Referer": "https://teamclubai.github.io", 
+                            "X-Title": "TeamClubAI"
                         },
                         body: JSON.stringify({
                             model: modelName,
@@ -421,43 +409,28 @@
 
                     if (!response.ok) {
                         const err = await response.json();
-                        throw new Error(err.error?.message || `API Error: ${response.status}`);
+                        throw new Error(err.error?.message || `${provider} API Error: ${response.status}`);
                     }
                     const data = await response.json();
                     return data.choices[0].message.content;
                 }
             }
 
-            // --- UI Helpers ---
             function renderUIBasedOnStage() {
                 singleLineInput.classList.add("hidden");
                 passwordInput.classList.add("hidden");
                 taskInput.classList.add("hidden");
 
-                if (appState.stage === STAGES.ASK_NAME) {
+                if (appState.stage === STAGES.ASK_NAME || appState.stage === STAGES.ASK_COUNT || appState.stage === STAGES.ASK_PROVIDERS) {
                     singleLineInput.classList.remove("hidden");
-                    singleLineInput.placeholder = "Enter your name...";
+                    singleLineInput.placeholder = "Type your response...";
                     singleLineInput.focus();
-                    if(chatBox.children.length === 0) addMessageToUI("System", "Welcome to TeamClubAI! 🚀<br><br>Let's set up your team. First, what is your name?", "agent");
+                    if(appState.stage === STAGES.ASK_NAME && chatBox.children.length === 0) {
+                        addMessageToUI("System", "Welcome to TeamClubAI Multi-Model Workspace! 🚀<br><br>Let's configure your models. What is your name?", "system");
+                    }
                 } 
-                else if (appState.stage === STAGES.ASK_COUNT) {
-                    singleLineInput.classList.remove("hidden");
-                    singleLineInput.placeholder = "Enter a number (2 to 5)...";
-                    singleLineInput.focus();
-                } 
-                else if (appState.stage === STAGES.ASK_MEMBERS) {
-                    singleLineInput.classList.remove("hidden");
-                    singleLineInput.placeholder = `Name for Member ${appState.members.length + 1}...`;
-                    singleLineInput.focus();
-                } 
-                else if (appState.stage === STAGES.ASK_PROVIDER) {
-                    singleLineInput.classList.remove("hidden");
-                    singleLineInput.placeholder = `Type 1, 2, 3, or 4...`;
-                    singleLineInput.focus();
-                }
-                else if (appState.stage === STAGES.ASK_API_KEY) {
+                else if (appState.stage === STAGES.ASK_API_KEYS) {
                     passwordInput.classList.remove("hidden");
-                    passwordInput.placeholder = `Paste your ${appState.apiProviderName} API key...`;
                     passwordInput.focus();
                 } 
                 else if (appState.stage === STAGES.READY) {
@@ -466,34 +439,33 @@
                     renderSidebar();
                     
                     if(chatBox.children.length === 0) {
-                        addMessageToUI("System", `Welcome back, **${appState.userName}**! Your team is ready.`, "agent");
-                        appState.chatHistory.forEach(msg => addMessageToUI(msg.sender, msg.text, msg.sender === appState.userName ? "user" : "agent"));
+                        addMessageToUI("System", `Workspace Restored. Welcome back, **${appState.userName}**.`, "system");
+                        appState.chatHistory.forEach(msg => addMessageToUI(msg.sender, msg.text, msg.cssClass || (msg.sender === appState.userName ? "user" : "agent")));
                     }
                 }
             }
 
             function renderSidebar() {
-                sidebarTitle.innerText = `${appState.userName}'s Team`;
-                statusList.innerHTML = `<li><small>Powered by: ${appState.apiProviderName}</small></li>`;
-                appState.members.forEach((name, index) => {
-                    let icon = index === 0 ? "🧠" : (index === appState.members.length - 1 ? "👑" : "🔍");
+                sidebarTitle.innerText = `${appState.userName}'s Network`;
+                statusList.innerHTML = "";
+                appState.agents.forEach((agent) => {
                     const li = document.createElement("li");
-                    li.id = `agent-${index}`;
-                    li.innerHTML = `${icon} <strong>${name}</strong>: <span>Waiting for task...</span>`;
+                    li.id = `agent-status-${agent.id}`;
+                    li.innerHTML = `🤖 <strong>Agent ${agent.id}</strong><br><small style="color:var(--${agent.provider}-color)">${agent.providerName}</small><br><span>Idle</span>`;
                     statusList.appendChild(li);
                 });
             }
 
-            function updateStatus(agentIndex, statusText) {
-                const el = document.getElementById(`agent-${agentIndex}`);
+            function updateStatus(agentId, statusText) {
+                const el = document.getElementById(`agent-status-${agentId}`);
                 if(!el) return;
                 el.querySelector('span').innerText = statusText;
                 el.classList.remove("active-agent", "error-agent");
-                if (statusText === "Working...") el.classList.add("active-agent");
+                if (statusText === "Generating...") el.classList.add("active-agent");
             }
 
             function resetAllStatuses() {
-                appState.members.forEach((_, i) => updateStatus(i, "Waiting for task..."));
+                appState.agents.forEach((a) => updateStatus(a.id, "Idle"));
             }
 
             function showNotification(message, type) {
