@@ -1,0 +1,65 @@
+name: TeamClubAI Compute Engine
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_type:
+        description: 'Type of job: "llm" or "python"'
+        required: true
+      prompt_or_code:
+        description: 'The prompt for the LLM or the code for Python'
+        required: true
+      job_id:
+        description: 'Unique ID for the frontend to track'
+        required: true
+
+permissions:
+  contents: write # Needed to commit the results back to the repo
+
+jobs:
+  execute-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # --- C++ / LLAMA.CPP PATH ---
+      - name: Setup and Run llama.cpp (Free Tier LLM)
+        if: ${{ github.event.inputs.job_type == 'llm' }}
+        run: |
+          echo "Setting up llama.cpp..."
+          sudo apt-get update && sudo apt-get install -y build-essential
+          git clone https://github.com/ggerganov/llama.cpp
+          cd llama.cpp
+          make -j2
+          
+          echo "Downloading lightweight model (Phi-3 Mini GGUF)..."
+          wget https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf -O phi3.gguf
+          
+          echo "Running Inference..."
+          ./main -m phi3.gguf -p "${{ github.event.inputs.prompt_or_code }}" -n 512 > ../output_${{ github.event.inputs.job_id }}.txt
+          cd ..
+
+      # --- PYTHON ACTION TUNNEL PATH ---
+      - name: Run Heavy Python Task
+        if: ${{ github.event.inputs.job_type == 'python' }}
+        run: |
+          echo "Executing Python Action Tunnel..."
+          # Write the code to a file
+          cat << 'EOF' > temp_script.py
+          ${{ github.event.inputs.prompt_or_code }}
+          EOF
+          
+          # Execute and capture output
+          python3 temp_script.py > output_${{ github.event.inputs.job_id }}.txt 2>&1 || echo "Python execution failed." >> output_${{ github.event.inputs.job_id }}.txt
+
+      # --- SAVE AND COMMIT RESULT ---
+      - name: Commit Output to Database Branch
+        run: |
+          mkdir -p db
+          mv output_${{ github.event.inputs.job_id }}.txt db/
+          git config --global user.name "TeamClubAI-Bot"
+          git config --global user.email "bot@teamclub.ai"
+          git add db/output_${{ github.event.inputs.job_id }}.txt
+          git commit -m "Swarm Result for Job ${{ github.event.inputs.job_id }}"
+          git push origin main
