@@ -1,0 +1,150 @@
+/* --- Base Variables & Setup --- */
+:root {
+  --bg-dark: #0f111a;
+  --glass-bg: rgba(20, 22, 35, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --neon-purple: #9d4edd;
+  --neon-blue: #00f0ff;
+  --neon-red: #ff3366;
+  --text-main: #e2e8f0;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top left, #240046, var(--bg-dark) 40%);
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  height: 100vh;
+  overflow: hidden; /* Prevents whole page scroll */
+}
+
+/* --- Layouts --- */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  flex: 1;
+  overflow: hidden; /* Crucial for chat scrolling */
+}
+
+/* --- Glassmorphism --- */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* --- CHAT SCROLL FIX --- */
+.chat-box {
+  flex: 1;
+  overflow-y: auto; /* Forces scrolling inside this container only */
+  padding-right: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Custom Scrollbar for sleek look */
+.chat-box::-webkit-scrollbar { width: 6px; }
+.chat-box::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+
+/* --- Messages --- */
+.msg-bubble {
+  padding: 12px 18px;
+  border-radius: 8px;
+  max-width: 80%;
+  line-height: 1.5;
+  animation: slideUp 0.3s ease-out;
+}
+.system { background: rgba(157, 78, 221, 0.1); border-left: 3px solid var(--neon-purple); align-self: flex-start; }
+.user { background: rgba(255, 255, 255, 0.05); align-self: flex-end; }
+.error { background: rgba(255, 51, 102, 0.1); border-left: 3px solid var(--neon-red); }
+.agent-proposer { background: rgba(0, 240, 255, 0.1); border-left: 3px solid var(--neon-blue); }
+.agent-critic { background: rgba(255, 165, 0, 0.1); border-left: 3px solid orange; }
+.agent-synthesizer { background: rgba(57, 255, 20, 0.1); border-left: 3px solid #39ff14; }
+
+/* --- Inputs & Buttons --- */
+.input-area {
+  display: flex;
+  gap: 10px;
+}
+input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+input:focus { border-color: var(--neon-purple); }
+
+button {
+  padding: 15px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary { background: var(--neon-purple); color: white; }
+.btn-primary:hover { box-shadow: 0 0 15px rgba(157, 78, 221, 0.5); }
+.btn-danger { background: var(--neon-red); color: white; }
+.btn-danger-outline { background: transparent; border: 1px solid var(--neon-red); color: var(--neon-red); padding: 8px 15px;}
+
+/* --- Sidebar --- */
+.agent-card {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--glass-border);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  transition: border-color 0.3s;
+}
+.agent-card.active { border-color: var(--neon-blue); }
+.status-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #555;
+  margin-right: 8px;
+}
+.status-dot.pulse {
+  background: var(--neon-blue);
+  box-shadow: 0 0 8px var(--neon-blue);
+  animation: pulse 1s infinite;
+}
+
+/* --- Animations --- */
+.fade-in { animation: fadeIn 0.5s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+.neon-text { color: var(--text-main); text-shadow: 0 0 10px rgba(157, 78, 221, 0.5); margin: 0; }
