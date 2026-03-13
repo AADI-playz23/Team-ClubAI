@@ -33,28 +33,13 @@
             overflow: hidden; 
         }
 
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
+        .app-container { display: flex; flex-direction: column; height: 100vh; padding: 20px; box-sizing: border-box; }
         .flex-center { justify-content: center; align-items: center; }
-
         .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .neon-text { color: var(--text-main); text-shadow: 0 0 10px rgba(157, 78, 221, 0.5); margin: 0; }
 
         /* --- 2. Layout Structure --- */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            flex: 1;
-            overflow: hidden; 
-        }
-
+        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; flex: 1; overflow: hidden; }
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
@@ -66,98 +51,51 @@
 
         .setup-box { width: 100%; max-width: 450px; text-align: center; }
         .setup-form { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; text-align: left; }
-
-        .workspace {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            box-sizing: border-box;
-        }
+        .workspace { display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
 
         /* --- 3. CHAT SCROLL FIX --- */
         .chat-box {
-            flex: 1;
-            overflow-y: auto; 
-            padding-right: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            flex: 1; overflow-y: auto; padding-right: 15px; margin-bottom: 20px;
+            display: flex; flex-direction: column; gap: 15px;
         }
-
         .chat-box::-webkit-scrollbar { width: 6px; }
         .chat-box::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
 
         /* --- Chat Messages --- */
-        .msg-bubble {
-            padding: 12px 18px;
-            border-radius: 8px;
-            max-width: 80%;
-            line-height: 1.5;
-            animation: slideUp 0.3s ease-out;
-        }
+        .msg-bubble { padding: 12px 18px; border-radius: 8px; max-width: 80%; line-height: 1.5; animation: slideUp 0.3s ease-out; }
         .system { background: rgba(157, 78, 221, 0.1); border-left: 3px solid var(--neon-purple); align-self: flex-start; }
         .user { background: rgba(255, 255, 255, 0.05); align-self: flex-end; }
         .error { background: rgba(255, 51, 102, 0.1); border-left: 3px solid var(--neon-red); align-self: center; }
         
-        /* Provider-Based Colors */
+        /* Provider Colors */
         .provider-Gemini { background: rgba(0, 240, 255, 0.1); border-left: 3px solid var(--neon-blue); align-self: flex-start;}
         .provider-OpenAI { background: rgba(57, 255, 20, 0.1); border-left: 3px solid var(--neon-green); align-self: flex-start;}
         .provider-Groq { background: rgba(255, 153, 0, 0.1); border-left: 3px solid var(--neon-orange); align-self: flex-start;}
         .provider-OpenRouter { background: rgba(157, 78, 221, 0.1); border-left: 3px solid var(--neon-purple); align-self: flex-start;}
-        .provider-Free { background: rgba(255, 255, 255, 0.1); border-left: 3px solid white; align-self: flex-start;}
+        .provider-Local_CPP { background: rgba(255, 255, 255, 0.1); border-left: 3px solid white; align-self: flex-start;}
+        .provider-Local_Python { background: rgba(255, 255, 0, 0.1); border-left: 3px solid yellow; align-self: flex-start;}
+        .provider-GitHub_Actions { background: rgba(100, 100, 100, 0.2); border-left: 3px solid #888; align-self: flex-start;}
 
         /* --- Inputs & Buttons --- */
         .input-area { display: flex; gap: 10px; }
         input, select {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--glass-border);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s;
+            flex: 1; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border);
+            color: white; padding: 15px; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.3s;
         }
         input:focus, select:focus { border-color: var(--neon-purple); }
         select option { background: var(--bg-dark); color: white; }
 
-        button {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+        button { padding: 15px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
         .btn-primary { background: var(--neon-purple); color: white; }
         .btn-primary:hover { box-shadow: 0 0 15px rgba(157, 78, 221, 0.5); }
         .btn-danger { background: var(--neon-red); color: white; }
         .btn-danger-outline { background: transparent; border: 1px solid var(--neon-red); color: var(--neon-red); padding: 8px 15px;}
 
         /* --- Sidebar --- */
-        .agent-card {
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--glass-border);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            transition: border-color 0.3s;
-        }
+        .agent-card { background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); padding: 15px; border-radius: 8px; margin-bottom: 10px; transition: border-color 0.3s; }
         .agent-card.active { border-color: var(--neon-purple); }
-        .status-dot {
-            display: inline-block;
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: #555;
-            margin-right: 8px;
-        }
-        .status-dot.pulse {
-            background: var(--neon-blue);
-            box-shadow: 0 0 8px var(--neon-blue);
-            animation: pulse 1s infinite;
-        }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555; margin-right: 8px; }
+        .status-dot.pulse { background: var(--neon-blue); box-shadow: 0 0 8px var(--neon-blue); animation: pulse 1s infinite; }
 
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -174,12 +112,9 @@
 
         function App() {
             // --- State Management ---
-            // Setup Phases: NAME -> SIZE -> PROVIDERS -> KEYS -> READY
             const [setupPhase, setSetupPhase] = useState('NAME');
-            
             const [userName, setUserName] = useState("");
-            const [teamSize, setTeamSize] = useState(3);
-            
+            const [teamSize, setTeamSize] = useState(2);
             const [agents, setAgents] = useState([]);
             const [currentAgentIndex, setCurrentAgentIndex] = useState(0);
             const [selectedProvider, setSelectedProvider] = useState("Gemini");
@@ -189,19 +124,111 @@
             const [currentKeyValue, setCurrentKeyValue] = useState("");
             const [apiKeys, setApiKeys] = useState({});
 
+            // GitHub specific credentials
+            const [githubDetails, setGithubDetails] = useState({ owner: "", repo: "", token: "" });
+            const [needsGithub, setNeedsGithub] = useState(false);
+
             const [messages, setMessages] = useState([]);
             const [inputValue, setInputValue] = useState("");
             const [isDebating, setIsDebating] = useState(false);
 
             const chatEndRef = useRef(null);
-
-            // Auto-Scroll Hook
-            useEffect(() => {
-                chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-            }, [messages]);
+            useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
             const addMessage = (text, sender) => {
                 setMessages(prev => [...prev, { id: Date.now() + Math.random(), text, sender }]);
+            };
+
+            // --- The Master API Router ---
+            const callLLM = async (provider, agentConfig, systemPrompt) => {
+                try {
+                    const apiKey = apiKeys[provider];
+
+                    // 1. Google Gemini
+                    if (provider === "Gemini") {
+                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt }] }] })
+                        });
+                        const data = await res.json();
+                        if(data.error) throw new Error(data.error.message);
+                        return data.candidates[0].content.parts[0].text;
+                    } 
+                    // 2. OpenRouter
+                    else if (provider === "OpenRouter") {
+                        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                            method: "POST", headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json", "HTTP-Referer": window.location.href, "X-Title": "TeamClubAI" },
+                            body: JSON.stringify({ model: "meta-llama/llama-3-8b-instruct:free", messages: [{ role: "user", content: systemPrompt }] })
+                        });
+                        const data = await res.json();
+                        if(data.error) throw new Error(data.error.message);
+                        return data.choices[0].message.content;
+                    }
+                    // 3. OpenAI / Groq
+                    else if (provider === "OpenAI" || provider === "Groq") {
+                        const baseURL = provider === "Groq" ? "https://api.groq.com/openai/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
+                        const modelStr = provider === "Groq" ? "llama3-8b-8192" : "gpt-3.5-turbo";
+                        const res = await fetch(baseURL, {
+                            method: "POST", headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                            body: JSON.stringify({ model: modelStr, messages: [{ role: "user", content: systemPrompt }] })
+                        });
+                        const data = await res.json();
+                        if(data.error) throw new Error(data.error.message);
+                        return data.choices[0].message.content;
+                    }
+                    // 4. Local C++ Server (llama.cpp wrapper running on port 8080)
+                    else if (provider === "Local_CPP") {
+                        const res = await fetch("http://localhost:8080/inference", {
+                            method: "POST",
+                            body: systemPrompt // Sending raw text
+                        });
+                        return await res.text();
+                    }
+                    // 5. Local Python Server (Action Tunnels running on port 8000)
+                    else if (provider === "Local_Python") {
+                        const res = await fetch("http://localhost:8000/execute-tunnel", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ code: systemPrompt })
+                        });
+                        const data = await res.json();
+                        return data.stdout || data.stderr || "Executed successfully with no output.";
+                    }
+                    // 6. GitHub Actions Engine (Cloud Compute)
+                    else if (provider === "GitHub_Actions") {
+                        const jobId = Date.now().toString();
+                        
+                        // Step A: Trigger the workflow
+                        const dispatchRes = await fetch(`https://api.github.com/repos/${githubDetails.owner}/${githubDetails.repo}/actions/workflows/swarm-compute.yml/dispatches`, {
+                            method: "POST",
+                            headers: {
+                                "Accept": "application/vnd.github.v3+json",
+                                "Authorization": `token ${githubDetails.token}`,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                ref: "main",
+                                inputs: { job_type: "llm", payload: systemPrompt }
+                            })
+                        });
+
+                        if (!dispatchRes.ok) throw new Error("Failed to trigger GitHub Action.");
+
+                        // Step B: Poll for result (Check every 15 seconds)
+                        const rawUrl = `https://raw.githubusercontent.com/${githubDetails.owner}/${githubDetails.repo}/main/db/latest_result.txt`;
+                        for (let i = 0; i < 15; i++) { // Wait up to ~3.5 minutes
+                            await new Promise(r => setTimeout(r, 15000)); 
+                            try {
+                                const checkRes = await fetch(rawUrl + `?t=${Date.now()}`); // Cache bust
+                                if (checkRes.ok) return await checkRes.text();
+                            } catch (e) { /* Ignore fetch errors during polling */ }
+                        }
+                        return "GitHub Action timeout. The runner took too long to respond.";
+                    }
+                } catch (error) {
+                    console.error(`API Error with ${provider}:`, error);
+                    return `[System Error]: Failed to connect to ${provider}. ${error.message}`;
+                }
             };
 
             // --- Setup Logic ---
@@ -213,37 +240,32 @@
                 } 
                 else if (setupPhase === 'SIZE') {
                     if (teamSize >= 2 && teamSize <= 5) {
-                        // Initialize empty agents array
                         const newAgents = Array.from({ length: teamSize }, (_, i) => ({
-                            id: i + 1,
-                            name: `Agent ${i + 1}`,
-                            provider: "",
-                            status: "Idle"
+                            id: i + 1, name: `Agent ${i + 1}`, provider: "", status: "Idle"
                         }));
                         setAgents(newAgents);
                         setSetupPhase('PROVIDERS');
-                    } else {
-                        alert("Please enter a number between 2 and 5.");
-                    }
+                    } else alert("Please enter a number between 2 and 5.");
                 }
                 else if (setupPhase === 'PROVIDERS') {
-                    // Save provider for current agent
                     const updatedAgents = [...agents];
                     updatedAgents[currentAgentIndex].provider = selectedProvider;
                     setAgents(updatedAgents);
 
+                    if (selectedProvider === "GitHub_Actions") setNeedsGithub(true);
+
                     if (currentAgentIndex + 1 < teamSize) {
                         setCurrentAgentIndex(currentAgentIndex + 1);
                     } else {
-                        // All agents assigned. Determine which API keys we need.
                         const uniqueProviders = [...new Set(updatedAgents.map(a => a.provider))];
-                        const neededKeys = uniqueProviders.filter(p => p !== "Free Tier");
+                        const neededKeys = uniqueProviders.filter(p => ["Gemini", "OpenAI", "Groq", "OpenRouter"].includes(p));
                         
                         if (neededKeys.length > 0) {
                             setRequiredKeys(neededKeys);
                             setSetupPhase('KEYS');
+                        } else if (needsGithub) {
+                            setSetupPhase('GITHUB_CREDS');
                         } else {
-                            // Only free tier selected, skip key collection
                             finishSetup(updatedAgents);
                         }
                     }
@@ -256,42 +278,44 @@
                     if (currentKeyIndex + 1 < requiredKeys.length) {
                         setCurrentKeyIndex(currentKeyIndex + 1);
                     } else {
-                        finishSetup(agents);
+                        needsGithub ? setSetupPhase('GITHUB_CREDS') : finishSetup(agents);
                     }
+                }
+                else if (setupPhase === 'GITHUB_CREDS') {
+                    if(githubDetails.owner && githubDetails.repo && githubDetails.token) {
+                        finishSetup(agents);
+                    } else alert("Please fill in all GitHub details.");
                 }
             };
 
             const finishSetup = (finalAgents) => {
                 setSetupPhase('READY');
-                addMessage(`Welcome, ${userName}. Your ${finalAgents.length}-agent council is online. All APIs connected. What are we working on?`, 'system');
+                addMessage(`Welcome, ${userName}. Your ${finalAgents.length}-agent council is online. All APIs and Free Tiers connected. What are we working on?`, 'system');
             };
 
-            // --- Debate Logic (No Roles) ---
+            // --- Debate Logic ---
             const triggerDebateLoop = async (task) => {
                 setIsDebating(true);
                 addMessage(task, 'user');
                 setInputValue("");
 
-                // Agents debate sequentially based on their provider models
+                let debateContext = `The user has requested the following task: "${task}"\n\n`;
+
                 for (let i = 0; i < agents.length; i++) {
                     if (!isDebating) break; 
                     
                     const agent = agents[i];
-                    setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, status: "Thinking..." } : a));
+                    setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, status: "Generating..." } : a));
                     
-                    // Simulate API Processing Time
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    
-                    // Generic debate responses
-                    let responseText = "";
-                    if (i === 0) responseText = `Analyzing the prompt. I suggest we start by looking at the core architecture...`;
-                    else if (i === agents.length - 1) responseText = `Reviewing the previous outputs. Everything aligns. Compiling the final optimal solution now.`;
-                    else responseText = `Building on what ${agents[i-1].name} said, we should also ensure we optimize the logic for performance.`;
+                    let agentPrompt = "";
+                    if (i === 0) agentPrompt = `You are ${agent.name}. ${debateContext} Provide the initial architecture, strategy, and core HTML/CSS/JS code to solve this.`;
+                    else if (i === agents.length - 1) agentPrompt = `You are ${agent.name}. Here is the debate:\n${debateContext}\nReview the previous outputs, fix any flaws, and output the final optimized code.`;
+                    else agentPrompt = `You are ${agent.name}. Here is the debate:\n${debateContext}\nCritique the previous agent's approach, suggest improvements, and write the necessary code adjustments.`;
 
-                    // CSS class is based on Provider, not Role
-                    let cssClass = agent.provider === "Free Tier" ? "provider-Free" : `provider-${agent.provider}`;
-                    addMessage(`[${agent.name} via ${agent.provider}]: ${responseText}`, cssClass);
+                    let responseText = await callLLM(agent.provider, agent, agentPrompt);
+                    debateContext += `--- ${agent.name} (${agent.provider}) said ---\n${responseText}\n\n`;
 
+                    addMessage(`[${agent.name} via ${agent.provider.replace('_', ' ')}]:\n${responseText}`, `provider-${agent.provider}`);
                     setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, status: "Idle" } : a));
                 }
                 
@@ -313,7 +337,7 @@
                 addMessage("System: Operations forcefully halted by user.", 'error');
             };
 
-            // --- Render Logic ---
+            // --- Render UI ---
             if (setupPhase !== 'READY') {
                 return (
                     <div className="app-container flex-center fade-in">
@@ -340,10 +364,12 @@
                                         <label>Select API Provider for <strong>Agent {currentAgentIndex + 1}</strong>:</label>
                                         <select value={selectedProvider} onChange={(e) => setSelectedProvider(e.target.value)}>
                                             <option value="Gemini">Google Gemini</option>
+                                            <option value="OpenRouter">OpenRouter</option>
                                             <option value="OpenAI">OpenAI</option>
                                             <option value="Groq">Groq (Fast Open-Source)</option>
-                                            <option value="OpenRouter">OpenRouter</option>
-                                            <option value="Free Tier">Free Tier (Your Backend)</option>
+                                            <option value="Local_CPP">Free Tier: Local C++ Server (Port 8080)</option>
+                                            <option value="Local_Python">Free Tier: Local Python Server (Port 8000)</option>
+                                            <option value="GitHub_Actions">Free Tier: GitHub Actions Engine</option>
                                         </select>
                                     </React.Fragment>
                                 )}
@@ -352,6 +378,15 @@
                                     <React.Fragment>
                                         <label style={{color: "var(--neon-purple)"}}>Provide API Key for <strong>{requiredKeys[currentKeyIndex]}</strong>:</label>
                                         <input type="password" autoFocus value={currentKeyValue} onChange={(e) => setCurrentKeyValue(e.target.value)} placeholder="Paste secret key here..." />
+                                    </React.Fragment>
+                                )}
+
+                                {setupPhase === 'GITHUB_CREDS' && (
+                                    <React.Fragment>
+                                        <label style={{color: "var(--neon-green)"}}>GitHub Configuration required for Actions Provider:</label>
+                                        <input type="text" placeholder="GitHub Owner (e.g., aadi-playz23)" value={githubDetails.owner} onChange={e => setGithubDetails({...githubDetails, owner: e.target.value})} />
+                                        <input type="text" placeholder="Repo Name (e.g., TeamClubAI)" value={githubDetails.repo} onChange={e => setGithubDetails({...githubDetails, repo: e.target.value})} />
+                                        <input type="password" placeholder="GitHub Personal Access Token" value={githubDetails.token} onChange={e => setGithubDetails({...githubDetails, token: e.target.value})} />
                                     </React.Fragment>
                                 )}
 
@@ -373,7 +408,7 @@
                         <section className="glass-panel workspace">
                             <div className="chat-box">
                                 {messages.map((msg) => (
-                                    <div key={msg.id} className={`msg-bubble ${msg.sender}`}>
+                                    <div key={msg.id} className={`msg-bubble ${msg.sender}`} style={{whiteSpace: "pre-wrap"}}>
                                         {msg.text}
                                     </div>
                                 ))}
@@ -381,13 +416,7 @@
                             </div>
 
                             <form onSubmit={handleChatSubmit} className="input-area">
-                                <input 
-                                    type="text" 
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    placeholder="Give the council a task..."
-                                    disabled={isDebating}
-                                />
+                                <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Give the council a task..." disabled={isDebating} />
                                 {isDebating ? (
                                     <button type="button" className="btn-danger" onClick={emergencyStop}>Stop Swarm</button>
                                 ) : (
@@ -402,7 +431,7 @@
                                 {agents.map(agent => (
                                     <div key={agent.id} className={`agent-card ${agent.status !== 'Idle' ? 'active' : ''}`}>
                                         <div style={{fontWeight: "bold", color: "var(--text-main)"}}>{agent.name}</div>
-                                        <div style={{fontSize: "12px", color: "var(--neon-purple)", marginTop: "4px"}}>[{agent.provider}]</div>
+                                        <div style={{fontSize: "12px", color: "var(--neon-purple)", marginTop: "4px"}}>[{agent.provider.replace('_', ' ')}]</div>
                                         <div style={{fontSize: "13px", marginTop: "8px", display: "flex", alignItems: "center"}}>
                                             <span className={`status-dot ${agent.status !== 'Idle' ? 'pulse' : ''}`}></span>
                                             {agent.status}
