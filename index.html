@@ -18,6 +18,8 @@
             --neon-purple: #9d4edd;
             --neon-blue: #00f0ff;
             --neon-red: #ff3366;
+            --neon-green: #39ff14;
+            --neon-orange: #ff9900;
             --text-main: #e2e8f0;
         }
 
@@ -28,7 +30,7 @@
             color: var(--text-main);
             font-family: 'Segoe UI', system-ui, sans-serif;
             height: 100vh;
-            overflow: hidden; /* Prevents whole page scroll */
+            overflow: hidden; 
         }
 
         .app-container {
@@ -44,13 +46,13 @@
         .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .neon-text { color: var(--text-main); text-shadow: 0 0 10px rgba(157, 78, 221, 0.5); margin: 0; }
 
-        /* --- 2. Layout Structure (CSS Grid) --- */
+        /* --- 2. Layout Structure --- */
         .main-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 20px;
             flex: 1;
-            overflow: hidden; /* Crucial for internal chat scrolling */
+            overflow: hidden; 
         }
 
         .glass-panel {
@@ -62,7 +64,7 @@
             padding: 20px;
         }
 
-        .setup-box { width: 100%; max-width: 400px; text-align: center; }
+        .setup-box { width: 100%; max-width: 450px; text-align: center; }
         .setup-form { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; text-align: left; }
 
         .workspace {
@@ -75,7 +77,7 @@
         /* --- 3. CHAT SCROLL FIX --- */
         .chat-box {
             flex: 1;
-            overflow-y: auto; /* Forces scrolling inside this container only */
+            overflow-y: auto; 
             padding-right: 15px;
             margin-bottom: 20px;
             display: flex;
@@ -97,15 +99,17 @@
         .system { background: rgba(157, 78, 221, 0.1); border-left: 3px solid var(--neon-purple); align-self: flex-start; }
         .user { background: rgba(255, 255, 255, 0.05); align-self: flex-end; }
         .error { background: rgba(255, 51, 102, 0.1); border-left: 3px solid var(--neon-red); align-self: center; }
-        .agent-Proposer { background: rgba(0, 240, 255, 0.1); border-left: 3px solid var(--neon-blue); align-self: flex-start;}
-        .agent-Critic { background: rgba(255, 165, 0, 0.1); border-left: 3px solid orange; align-self: flex-start;}
-        .agent-Synthesizer { background: rgba(57, 255, 20, 0.1); border-left: 3px solid #39ff14; align-self: flex-start;}
-        .agent-Security { background: rgba(255, 255, 0, 0.1); border-left: 3px solid yellow; align-self: flex-start;}
-        .agent-Optimizer { background: rgba(255, 0, 255, 0.1); border-left: 3px solid magenta; align-self: flex-start;}
+        
+        /* Provider-Based Colors */
+        .provider-Gemini { background: rgba(0, 240, 255, 0.1); border-left: 3px solid var(--neon-blue); align-self: flex-start;}
+        .provider-OpenAI { background: rgba(57, 255, 20, 0.1); border-left: 3px solid var(--neon-green); align-self: flex-start;}
+        .provider-Groq { background: rgba(255, 153, 0, 0.1); border-left: 3px solid var(--neon-orange); align-self: flex-start;}
+        .provider-OpenRouter { background: rgba(157, 78, 221, 0.1); border-left: 3px solid var(--neon-purple); align-self: flex-start;}
+        .provider-Free { background: rgba(255, 255, 255, 0.1); border-left: 3px solid white; align-self: flex-start;}
 
         /* --- Inputs & Buttons --- */
         .input-area { display: flex; gap: 10px; }
-        input {
+        input, select {
             flex: 1;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--glass-border);
@@ -116,7 +120,8 @@
             outline: none;
             transition: border-color 0.3s;
         }
-        input:focus { border-color: var(--neon-purple); }
+        input:focus, select:focus { border-color: var(--neon-purple); }
+        select option { background: var(--bg-dark); color: white; }
 
         button {
             padding: 15px 25px;
@@ -140,7 +145,7 @@
             margin-bottom: 10px;
             transition: border-color 0.3s;
         }
-        .agent-card.active { border-color: var(--neon-blue); }
+        .agent-card.active { border-color: var(--neon-purple); }
         .status-dot {
             display: inline-block;
             width: 8px; height: 8px;
@@ -154,7 +159,6 @@
             animation: pulse 1s infinite;
         }
 
-        /* --- Animations --- */
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -170,81 +174,130 @@
 
         function App() {
             // --- State Management ---
-            const [setupStep, setSetupStep] = useState(0);
+            // Setup Phases: NAME -> SIZE -> PROVIDERS -> KEYS -> READY
+            const [setupPhase, setSetupPhase] = useState('NAME');
+            
             const [userName, setUserName] = useState("");
             const [teamSize, setTeamSize] = useState(3);
-            const [agents, setAgents] = useState([]);
             
+            const [agents, setAgents] = useState([]);
+            const [currentAgentIndex, setCurrentAgentIndex] = useState(0);
+            const [selectedProvider, setSelectedProvider] = useState("Gemini");
+            
+            const [requiredKeys, setRequiredKeys] = useState([]);
+            const [currentKeyIndex, setCurrentKeyIndex] = useState(0);
+            const [currentKeyValue, setCurrentKeyValue] = useState("");
+            const [apiKeys, setApiKeys] = useState({});
+
             const [messages, setMessages] = useState([]);
             const [inputValue, setInputValue] = useState("");
             const [isDebating, setIsDebating] = useState(false);
 
-            // The secret to perfect chat scrolling
             const chatEndRef = useRef(null);
 
+            // Auto-Scroll Hook
             useEffect(() => {
                 chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
             }, [messages]);
 
-            // --- Handlers ---
             const addMessage = (text, sender) => {
                 setMessages(prev => [...prev, { id: Date.now() + Math.random(), text, sender }]);
             };
 
+            // --- Setup Logic ---
             const handleSetupSubmit = (e) => {
                 e.preventDefault();
-                if (setupStep === 0 && userName.trim()) {
-                    setSetupStep(1);
-                } else if (setupStep === 1) {
+                
+                if (setupPhase === 'NAME') {
+                    if (userName.trim()) setSetupPhase('SIZE');
+                } 
+                else if (setupPhase === 'SIZE') {
                     if (teamSize >= 2 && teamSize <= 5) {
-                        const roles = ["Proposer", "Critic", "Synthesizer", "Security", "Optimizer"];
+                        // Initialize empty agents array
                         const newAgents = Array.from({ length: teamSize }, (_, i) => ({
                             id: i + 1,
-                            role: roles[i],
+                            name: `Agent ${i + 1}`,
+                            provider: "",
                             status: "Idle"
                         }));
                         setAgents(newAgents);
-                        setSetupStep(2); 
-                        addMessage(`Welcome, ${userName}. Your ${teamSize}-agent debate council is initialized. What would you like us to build?`, 'system');
+                        setSetupPhase('PROVIDERS');
                     } else {
                         alert("Please enter a number between 2 and 5.");
                     }
                 }
+                else if (setupPhase === 'PROVIDERS') {
+                    // Save provider for current agent
+                    const updatedAgents = [...agents];
+                    updatedAgents[currentAgentIndex].provider = selectedProvider;
+                    setAgents(updatedAgents);
+
+                    if (currentAgentIndex + 1 < teamSize) {
+                        setCurrentAgentIndex(currentAgentIndex + 1);
+                    } else {
+                        // All agents assigned. Determine which API keys we need.
+                        const uniqueProviders = [...new Set(updatedAgents.map(a => a.provider))];
+                        const neededKeys = uniqueProviders.filter(p => p !== "Free Tier");
+                        
+                        if (neededKeys.length > 0) {
+                            setRequiredKeys(neededKeys);
+                            setSetupPhase('KEYS');
+                        } else {
+                            // Only free tier selected, skip key collection
+                            finishSetup(updatedAgents);
+                        }
+                    }
+                }
+                else if (setupPhase === 'KEYS') {
+                    const providerToSave = requiredKeys[currentKeyIndex];
+                    setApiKeys(prev => ({ ...prev, [providerToSave]: currentKeyValue }));
+                    setCurrentKeyValue("");
+
+                    if (currentKeyIndex + 1 < requiredKeys.length) {
+                        setCurrentKeyIndex(currentKeyIndex + 1);
+                    } else {
+                        finishSetup(agents);
+                    }
+                }
             };
 
+            const finishSetup = (finalAgents) => {
+                setSetupPhase('READY');
+                addMessage(`Welcome, ${userName}. Your ${finalAgents.length}-agent council is online. All APIs connected. What are we working on?`, 'system');
+            };
+
+            // --- Debate Logic (No Roles) ---
             const triggerDebateLoop = async (task) => {
                 setIsDebating(true);
                 addMessage(task, 'user');
                 setInputValue("");
 
-                // Simulate the Debate Loop across the active agents
+                // Agents debate sequentially based on their provider models
                 for (let i = 0; i < agents.length; i++) {
                     if (!isDebating) break; 
                     
                     const agent = agents[i];
-                    
-                    // Set status to Debating
-                    setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, status: "Debating..." } : a));
+                    setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, status: "Thinking..." } : a));
                     
                     // Simulate API Processing Time
                     await new Promise(resolve => setTimeout(resolve, 1500));
                     
-                    // Mock debate responses based on role
+                    // Generic debate responses
                     let responseText = "";
-                    if (agent.role === "Proposer") responseText = `I propose we structure the solution this way to meet the user's goal...`;
-                    else if (agent.role === "Critic") responseText = `I disagree with the Proposer's approach. We need to consider these edge cases...`;
-                    else if (agent.role === "Synthesizer") responseText = `Merging both ideas. Here is the final, optimized execution plan...`;
-                    else responseText = `Analyzing the output for ${agent.role} protocols... looks good.`;
+                    if (i === 0) responseText = `Analyzing the prompt. I suggest we start by looking at the core architecture...`;
+                    else if (i === agents.length - 1) responseText = `Reviewing the previous outputs. Everything aligns. Compiling the final optimal solution now.`;
+                    else responseText = `Building on what ${agents[i-1].name} said, we should also ensure we optimize the logic for performance.`;
 
-                    addMessage(`[${agent.role}]: ${responseText}`, `agent-${agent.role}`);
+                    // CSS class is based on Provider, not Role
+                    let cssClass = agent.provider === "Free Tier" ? "provider-Free" : `provider-${agent.provider}`;
+                    addMessage(`[${agent.name} via ${agent.provider}]: ${responseText}`, cssClass);
 
-                    // Reset status
                     setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, status: "Idle" } : a));
                 }
                 
                 if(isDebating) {
                     setIsDebating(false);
-                    addMessage("Debate concluded. The optimal solution has been generated.", 'system');
+                    addMessage("Debate concluded. The hive mind has reached a consensus.", 'system');
                 }
             };
 
@@ -257,39 +310,51 @@
             const emergencyStop = () => {
                 setIsDebating(false);
                 setAgents(prev => prev.map(a => ({ ...a, status: "Idle" })));
-                addMessage("System: Debate forcefully halted by user.", 'error');
+                addMessage("System: Operations forcefully halted by user.", 'error');
             };
 
             // --- Render Logic ---
-            if (setupStep < 2) {
+            if (setupPhase !== 'READY') {
                 return (
                     <div className="app-container flex-center fade-in">
                         <div className="glass-panel setup-box">
                             <h1 className="neon-text">Initialize Swarm</h1>
                             <form onSubmit={handleSetupSubmit} className="setup-form">
-                                {setupStep === 0 ? (
+                                
+                                {setupPhase === 'NAME' && (
                                     <React.Fragment>
                                         <label>What is your name, Commander?</label>
-                                        <input 
-                                            type="text" 
-                                            autoFocus
-                                            value={userName} 
-                                            onChange={(e) => setUserName(e.target.value)} 
-                                            placeholder="e.g., Aadi" 
-                                        />
-                                    </React.Fragment>
-                                ) : (
-                                    <React.Fragment>
-                                        <label>How many AI debaters do you want? (2-5)</label>
-                                        <input 
-                                            type="number" 
-                                            min="2" max="5"
-                                            autoFocus
-                                            value={teamSize} 
-                                            onChange={(e) => setTeamSize(parseInt(e.target.value))} 
-                                        />
+                                        <input type="text" autoFocus value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="e.g., Aadi" />
                                     </React.Fragment>
                                 )}
+
+                                {setupPhase === 'SIZE' && (
+                                    <React.Fragment>
+                                        <label>How many agents in the council? (2-5)</label>
+                                        <input type="number" min="2" max="5" autoFocus value={teamSize} onChange={(e) => setTeamSize(parseInt(e.target.value))} />
+                                    </React.Fragment>
+                                )}
+
+                                {setupPhase === 'PROVIDERS' && (
+                                    <React.Fragment>
+                                        <label>Select API Provider for <strong>Agent {currentAgentIndex + 1}</strong>:</label>
+                                        <select value={selectedProvider} onChange={(e) => setSelectedProvider(e.target.value)}>
+                                            <option value="Gemini">Google Gemini</option>
+                                            <option value="OpenAI">OpenAI</option>
+                                            <option value="Groq">Groq (Fast Open-Source)</option>
+                                            <option value="OpenRouter">OpenRouter</option>
+                                            <option value="Free Tier">Free Tier (Your Backend)</option>
+                                        </select>
+                                    </React.Fragment>
+                                )}
+
+                                {setupPhase === 'KEYS' && (
+                                    <React.Fragment>
+                                        <label style={{color: "var(--neon-purple)"}}>Provide API Key for <strong>{requiredKeys[currentKeyIndex]}</strong>:</label>
+                                        <input type="password" autoFocus value={currentKeyValue} onChange={(e) => setCurrentKeyValue(e.target.value)} placeholder="Paste secret key here..." />
+                                    </React.Fragment>
+                                )}
+
                                 <button type="submit" className="btn-primary">Next</button>
                             </form>
                         </div>
@@ -312,7 +377,6 @@
                                         {msg.text}
                                     </div>
                                 ))}
-                                {/* The Invisible Div that catches the scroll */}
                                 <div ref={chatEndRef} /> 
                             </div>
 
@@ -325,7 +389,7 @@
                                     disabled={isDebating}
                                 />
                                 {isDebating ? (
-                                    <button type="button" className="btn-danger" onClick={emergencyStop}>Stop Debate</button>
+                                    <button type="button" className="btn-danger" onClick={emergencyStop}>Stop Swarm</button>
                                 ) : (
                                     <button type="submit" className="btn-primary">Deploy</button>
                                 )}
@@ -337,7 +401,8 @@
                             <div>
                                 {agents.map(agent => (
                                     <div key={agent.id} className={`agent-card ${agent.status !== 'Idle' ? 'active' : ''}`}>
-                                        <div style={{fontWeight: "bold", color: "var(--neon-purple)"}}>{agent.role}</div>
+                                        <div style={{fontWeight: "bold", color: "var(--text-main)"}}>{agent.name}</div>
+                                        <div style={{fontSize: "12px", color: "var(--neon-purple)", marginTop: "4px"}}>[{agent.provider}]</div>
                                         <div style={{fontSize: "13px", marginTop: "8px", display: "flex", alignItems: "center"}}>
                                             <span className={`status-dot ${agent.status !== 'Idle' ? 'pulse' : ''}`}></span>
                                             {agent.status}
@@ -351,7 +416,6 @@
             );
         }
 
-        // Render the App to the DOM
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
