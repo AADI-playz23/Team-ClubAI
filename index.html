@@ -3,125 +3,363 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeamClubAI - Action Driven Swarm</title>
+    <title>TeamClubAI - Autonomous Agency</title>
     <style>
-        /* Dark Mode & Glassmorphism */
-        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        .chat-box { height: 400px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .msg { margin-bottom: 10px; padding: 10px; border-radius: 6px; background: #1e293b; }
-        .sys-msg { color: #3b82f6; font-style: italic; }
-        input, button { padding: 12px; border-radius: 6px; border: none; margin-top: 10px; }
-        input { width: calc(100% - 150px); background: #334155; color: white; }
-        button { width: 130px; background: #3b82f6; color: white; cursor: pointer; font-weight: bold; }
-        button:hover { background: #2563eb; }
+        /* --- 1. Visual Aesthetic & Cyberpunk Glassmorphism --- */
+        :root {
+            --bg-dark: #0f111a;
+            --glass-bg: rgba(20, 22, 35, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --neon-purple: #9d4edd;
+            --neon-green: #39ff14;
+            --neon-red: #ff3366;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: radial-gradient(circle at top left, #240046, var(--bg-dark) 40%),
+                        radial-gradient(circle at bottom right, #03045e, var(--bg-dark) 40%);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- 2. Layout Structure (CSS Grid) --- */
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 20px;
+        }
+
+        #main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Workspace (Left) --- */
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        /* --- 5. Chat UI Components --- */
+        .msg { margin-bottom: 15px; padding: 12px; border-radius: 8px; max-width: 85%; line-height: 1.5; }
+        .msg-sys { background: rgba(157, 78, 221, 0.1); border-left: 4px solid var(--neon-purple); }
+        .msg-user { background: rgba(255, 255, 255, 0.05); align-self: flex-end; margin-left: auto; }
+        .msg-terminal { background: #000; color: var(--neon-green); font-family: monospace; border: 1px solid #333; }
+
+        /* --- 3. Dynamic Input Area --- */
+        #input-area {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-base {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .input-base:focus { border-color: var(--neon-purple); }
+        
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-primary { background: var(--neon-purple); color: white; }
+        .btn-primary:hover { box-shadow: 0 0 15px rgba(157, 78, 221, 0.5); }
+        .btn-danger { background: var(--neon-red); color: white; }
+        .btn-danger:hover { box-shadow: 0 0 15px rgba(255, 51, 102, 0.5); }
+        
+        .hidden { display: none !important; }
+
+        /* --- Sidebar (Right) --- */
+        .agent-card {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #555;
+            margin-right: 8px;
+        }
+        .status-working { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>TeamClubAI Dashboard</h2>
-    <div id="setup-panel">
-        <p>To use the Free Tier (GitHub Actions + llama.cpp), enter your GitHub details:</p>
-        <input type="text" id="gh-owner" placeholder="GitHub Username (e.g., aadi)">
-        <input type="text" id="gh-repo" placeholder="Repository Name (e.g., TeamClubAI)">
-        <input type="password" id="gh-token" placeholder="GitHub Personal Access Token (PAT)">
-        <button onclick="saveSettings()">Save Settings</button>
+    <div id="header">
+        <h1 style="margin:0; color: var(--neon-purple); text-shadow: 0 0 10px rgba(157, 78, 221, 0.3);">TeamClubAI</h1>
+        <button class="btn-danger" onclick="resetMemory()" style="padding: 10px 15px; font-size: 12px;">Reset Config</button>
     </div>
 
-    <div class="chat-box" id="chat"></div>
-    
-    <div>
-        <input type="text" id="prompt" placeholder="Assign a task to the swarm...">
-        <button onclick="deploySwarm()">Deploy Swarm</button>
-    </div>
-</div>
-
-<script>
-    // 1. State Management
-    let ghConfig = JSON.parse(localStorage.getItem('teamclub_gh')) || {};
-    if(ghConfig.token) document.getElementById('setup-panel').style.display = 'none';
-
-    function saveSettings() {
-        ghConfig = {
-            owner: document.getElementById('gh-owner').value,
-            repo: document.getElementById('gh-repo').value,
-            token: document.getElementById('gh-token').value
-        };
-        localStorage.setItem('teamclub_gh', JSON.stringify(ghConfig));
-        document.getElementById('setup-panel').style.display = 'none';
-        logMsg("System: GitHub configuration saved.", "sys-msg");
-    }
-
-    function logMsg(text, className = "msg") {
-        const chat = document.getElementById('chat');
-        chat.innerHTML += `<div class="${className}">${text}</div>`;
-        chat.scrollTop = chat.scrollHeight;
-    }
-
-    // 2. Triggering the GitHub Action Backend
-    async function dispatchGitHubAction(jobType, payload) {
-        const jobId = Date.now().toString();
-        logMsg(`System: Dispatching ${jobType} job to GitHub Actions... (ID: ${jobId})`, "sys-msg");
-
-        const response = await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/actions/workflows/swarm-compute.yml/dispatches`, {
-            method: "POST",
-            headers: {
-                "Accept": "application/vnd.github.v3+json",
-                "Authorization": `token ${ghConfig.token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                ref: "main",
-                inputs: { job_type: jobType, prompt_or_code: payload, job_id: jobId }
-            })
-        });
-
-        if (!response.ok) {
-            logMsg(`Error triggering action: ${response.statusText}`);
-            return null;
-        }
-
-        return await pollForResult(jobId);
-    }
-
-    // 3. Polling for the Result
-    async function pollForResult(jobId) {
-        logMsg(`System: Waiting for GitHub Runner to process and commit... (This takes 1-3 minutes)`, "sys-msg");
-        
-        // Poll every 15 seconds to see if the file exists in the raw GitHub content
-        const url = `https://raw.githubusercontent.com/${ghConfig.owner}/${ghConfig.repo}/main/db/output_${jobId}.txt`;
-        
-        for (let i = 0; i < 20; i++) { // Max wait ~5 mins
-            await new Promise(r => setTimeout(r, 15000)); 
+    <div id="main-grid">
+        <div class="glass-panel" style="justify-content: flex-end;">
+            <div id="chat-box"></div>
             
-            try {
-                const res = await fetch(url + `?t=${Date.now()}`); // Cache bust
-                if (res.ok) {
-                    const data = await res.text();
-                    return data;
-                }
-            } catch (e) {}
-            console.log("Polling... attempt " + (i+1));
+            <div id="input-area">
+                <input type="text" id="input-text" class="input-base" placeholder="Type here..." autocomplete="off">
+                <input type="password" id="input-pass" class="input-base hidden" placeholder="Paste API Key...">
+                <textarea id="input-area-text" class="input-base hidden" rows="3" placeholder="Assign a task to the swarm..."></textarea>
+                
+                <button id="btn-send" class="btn-primary" onclick="handleUserInput()">Send</button>
+                <button id="btn-stop" class="btn-danger hidden" onclick="emergencyStop()">Stop Loop</button>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <h3 style="margin-top:0; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">Swarm Status</h3>
+            <div id="sidebar-agents">
+                <p style="color: var(--text-muted); font-size: 14px;">Agents will appear here once configured.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 4. The Conversational State Machine ---
+        let setupState = 0;
+        let agencyConfig = { name: "", size: 0, agents: [], keys: {} };
+        let currentAgentSetupIndex = 0;
+        let pendingProviders = [];
+
+        const chatBox = document.getElementById('chat-box');
+        const inText = document.getElementById('input-text');
+        const inPass = document.getElementById('input-pass');
+        const inArea = document.getElementById('input-area-text');
+        const btnSend = document.getElementById('btn-send');
+
+        // Allow 'Enter' key to send
+        [inText, inPass].forEach(el => el.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleUserInput();
+        }));
+
+        function appendMsg(text, type) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerHTML = text.replace(/\n/g, '<br>');
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
-        return "Error: Job timed out or runner failed.";
-    }
 
-    // 4. Main Swarm Execution
-    async function deploySwarm() {
-        const input = document.getElementById('prompt').value;
-        if (!input) return;
-        
-        document.getElementById('prompt').value = '';
-        logMsg(`User: ${input}`);
+        function initApp() {
+            if (localStorage.getItem('teamclub_config')) {
+                agencyConfig = JSON.parse(localStorage.getItem('teamclub_config'));
+                setupState = 5; // Ready State
+                renderSidebar();
+                unlockMainChat();
+            } else {
+                appendMsg("System: Welcome to your AI Agency. What is your name?", "msg-sys");
+                inText.focus();
+            }
+        }
 
-        // Call the Free Tier LLM (llama.cpp on GitHub Runner)
-        const agentResponse = await dispatchGitHubAction('llm', `You are the Manager Agent. Break down this task: ${input}`);
-        logMsg(`Manager Agent (Phi-3 via GitHub Actions):\n${agentResponse}`);
-        
-        // Example: If the agent wrote Python code, we could dispatch it again
-        // const pythonResult = await dispatchGitHubAction('python', 'print("Hello from the cloud!")');
-    }
-</script>
+        function handleUserInput() {
+            let val;
+            if (!inText.classList.contains('hidden')) val = inText.value.trim();
+            else if (!inPass.classList.contains('hidden')) val = inPass.value.trim();
+            else val = inArea.value.trim();
+
+            if (!val) return;
+
+            // Clear inputs
+            inText.value = ''; inPass.value = ''; inArea.value = '';
+            
+            if (setupState < 5) appendMsg(val, "msg-user");
+
+            // State Machine Logic
+            switch(setupState) {
+                case 0: // Name
+                    agencyConfig.name = val;
+                    setupState++;
+                    appendMsg(`System: Hello ${val}. How many agent roles do you want in your swarm? (Enter 3 to 5)`, "msg-sys");
+                    break;
+                case 1: // Team Size
+                    const size = parseInt(val);
+                    if (isNaN(size) || size < 3 || size > 5) {
+                        appendMsg("System: Invalid input. Please enter a number between 3 and 5.", "msg-sys");
+                        return;
+                    }
+                    agencyConfig.size = size;
+                    setupState++;
+                    askProviderForAgent();
+                    break;
+                case 2: // Providers
+                    const roles = ["Manager", "Coder", "Finalizer", "QA", "Deployer"];
+                    const providers = ["Gemini", "OpenAI", "Groq", "OpenRouter", "Free Tier"];
+                    const choice = parseInt(val);
+                    
+                    if (isNaN(choice) || choice < 1 || choice > 5) {
+                        appendMsg("System: Please enter a number from 1 to 5.", "msg-sys");
+                        return;
+                    }
+
+                    const selectedProvider = providers[choice - 1];
+                    agencyConfig.agents.push({
+                        id: currentAgentSetupIndex + 1,
+                        role: roles[currentAgentSetupIndex],
+                        provider: selectedProvider
+                    });
+
+                    if (selectedProvider !== "Free Tier" && !pendingProviders.includes(selectedProvider)) {
+                        pendingProviders.push(selectedProvider);
+                    }
+
+                    currentAgentSetupIndex++;
+                    if (currentAgentSetupIndex < agencyConfig.size) {
+                        askProviderForAgent();
+                    } else {
+                        setupState++;
+                        askForKeys();
+                    }
+                    break;
+                case 3: // Collect Keys
+                    const currentReq = pendingProviders[0];
+                    agencyConfig.keys[currentReq] = val;
+                    pendingProviders.shift();
+                    askForKeys();
+                    break;
+                case 4: // Main Loop Trigger
+                case 5:
+                    appendMsg(`User: ${val}`, "msg-user");
+                    runSwarmAction(val);
+                    break;
+            }
+        }
+
+        function askProviderForAgent() {
+            const roles = ["Manager", "Coder", "Finalizer", "QA", "Deployer"];
+            const currentRole = roles[currentAgentSetupIndex];
+            appendMsg(`System: Who should play the role of Agent ${currentAgentSetupIndex + 1} [${currentRole}]?<br>1. Gemini<br>2. OpenAI<br>3. Groq<br>4. OpenRouter<br>5. Free Tier (Small Models)`, "msg-sys");
+        }
+
+        function askForKeys() {
+            if (pendingProviders.length > 0) {
+                // Swap UI to password field
+                inText.classList.add('hidden');
+                inPass.classList.remove('hidden');
+                appendMsg(`System: Please paste your API Key for [${pendingProviders[0]}]:`, "msg-sys");
+                inPass.focus();
+            } else {
+                // Done with setup
+                localStorage.setItem('teamclub_config', JSON.stringify(agencyConfig));
+                setupState = 5;
+                renderSidebar();
+                unlockMainChat();
+            }
+        }
+
+        function unlockMainChat() {
+            inText.classList.add('hidden');
+            inPass.classList.add('hidden');
+            inArea.classList.remove('hidden');
+            document.getElementById('btn-send').innerText = "Deploy Agency";
+            appendMsg("System: Setup complete. The agents are ready to collaborate endlessly...", "msg-sys");
+        }
+
+        function renderSidebar() {
+            const sidebar = document.getElementById('sidebar-agents');
+            sidebar.innerHTML = '';
+            agencyConfig.agents.forEach(agent => {
+                sidebar.innerHTML += `
+                    <div class="agent-card" id="agent-${agent.id}">
+                        <div style="font-weight: bold; color: var(--neon-purple);">${agent.role} (Agent ${agent.id})</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Provider: ${agent.provider}</div>
+                        <div style="margin-top: 10px; font-size: 13px;">
+                            <span class="status-dot" id="dot-${agent.id}"></span> 
+                            <span id="status-text-${agent.id}">Idle</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function resetMemory() {
+            localStorage.removeItem('teamclub_config');
+            location.reload();
+        }
+
+        let isRunning = false;
+        async function runSwarmAction(prompt) {
+            isRunning = true;
+            document.getElementById('btn-send').classList.add('hidden');
+            document.getElementById('btn-stop').classList.remove('hidden');
+
+            // Example visualization of the loop
+            for (let agent of agencyConfig.agents) {
+                if (!isRunning) break;
+                
+                // Set UI to working
+                document.getElementById(`dot-${agent.id}`).classList.add('status-working');
+                document.getElementById(`status-text-${agent.id}`).innerText = "Working...";
+                
+                // Simulate API Call delay
+                await new Promise(r => setTimeout(r, 2000));
+                
+                appendMsg(`[${agent.role}]: Analyzing task requirements...`, "msg-sys");
+
+                // Reset UI to idle
+                document.getElementById(`dot-${agent.id}`).classList.remove('status-working');
+                document.getElementById(`status-text-${agent.id}`).innerText = "Idle";
+            }
+            
+            if (isRunning) {
+                appendMsg("System: Action Tunnel executed natively.\n> Process Exited with Code 0.", "msg-terminal");
+                emergencyStop(); // Reset buttons
+            }
+        }
+
+        function emergencyStop() {
+            isRunning = false;
+            document.getElementById('btn-send').classList.remove('hidden');
+            document.getElementById('btn-stop').classList.add('hidden');
+            appendMsg("System: Swarm operations halted by user.", "msg-sys");
+            renderSidebar(); // reset all dots to idle
+        }
+
+        window.onload = initApp;
+    </script>
 </body>
 </html>
