@@ -1,4 +1,4 @@
-name: TeamClubAI Compute Engine
+name: TeamClubAI Swarm Compute
 
 on:
   workflow_dispatch:
@@ -6,60 +6,43 @@ on:
       job_type:
         description: 'Type of job: "llm" or "python"'
         required: true
-      prompt_or_code:
-        description: 'The prompt for the LLM or the code for Python'
-        required: true
-      job_id:
-        description: 'Unique ID for the frontend to track'
+      payload:
+        description: 'Prompt or Python Code'
         required: true
 
 permissions:
-  contents: write # Needed to commit the results back to the repo
+  contents: write
 
 jobs:
-  execute-task:
+  compute-node:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      # --- C++ / LLAMA.CPP PATH ---
-      - name: Setup and Run llama.cpp (Free Tier LLM)
+      - name: Free Tier Inference (C++ / llama.cpp)
         if: ${{ github.event.inputs.job_type == 'llm' }}
         run: |
-          echo "Setting up llama.cpp..."
-          sudo apt-get update && sudo apt-get install -y build-essential
+          sudo apt-get install -y build-essential
           git clone https://github.com/ggerganov/llama.cpp
-          cd llama.cpp
-          make -j2
-          
-          echo "Downloading lightweight model (Phi-3 Mini GGUF)..."
+          cd llama.cpp && make -j2
           wget https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf -O phi3.gguf
-          
-          echo "Running Inference..."
-          ./main -m phi3.gguf -p "${{ github.event.inputs.prompt_or_code }}" -n 512 > ../output_${{ github.event.inputs.job_id }}.txt
-          cd ..
+          ./main -m phi3.gguf -p "${{ github.event.inputs.payload }}" -n 512 > ../output.txt
 
-      # --- PYTHON ACTION TUNNEL PATH ---
-      - name: Run Heavy Python Task
+      - name: Python Action Tunnel
         if: ${{ github.event.inputs.job_type == 'python' }}
         run: |
-          echo "Executing Python Action Tunnel..."
-          # Write the code to a file
-          cat << 'EOF' > temp_script.py
-          ${{ github.event.inputs.prompt_or_code }}
+          cat << 'EOF' > script.py
+          ${{ github.event.inputs.payload }}
           EOF
-          
-          # Execute and capture output
-          python3 temp_script.py > output_${{ github.event.inputs.job_id }}.txt 2>&1 || echo "Python execution failed." >> output_${{ github.event.inputs.job_id }}.txt
+          python3 script.py > output.txt 2>&1
 
-      # --- SAVE AND COMMIT RESULT ---
-      - name: Commit Output to Database Branch
+      - name: Save Results to Repo
         run: |
           mkdir -p db
-          mv output_${{ github.event.inputs.job_id }}.txt db/
+          mv output.txt db/latest_result.txt
           git config --global user.name "TeamClubAI-Bot"
           git config --global user.email "bot@teamclub.ai"
-          git add db/output_${{ github.event.inputs.job_id }}.txt
-          git commit -m "Swarm Result for Job ${{ github.event.inputs.job_id }}"
+          git add db/latest_result.txt
+          git commit -m "Automated Swarm Result"
           git push origin main
